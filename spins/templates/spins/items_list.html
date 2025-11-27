@@ -1,0 +1,366 @@
+{% extends "base.html" %}
+
+{% block page_title_text %}📦 SPINS Items{% endblock %}
+
+{% block extra_styles %}
+    .header-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .filter-section {
+        background: #f7fafc;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 25px;
+    }
+    
+    .filter-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        align-items: end;
+    }
+    
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .filter-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #4a5568;
+        font-size: 0.875rem;
+    }
+    
+    .filter-group select,
+    .filter-group input {
+        width: 100%;
+        padding: 10px 15px;
+        font-size: 14px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        background: white;
+    }
+    
+    .filter-group select:focus,
+    .filter-group input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .filter-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .data-table thead {
+        background: #667eea;
+        color: white;
+    }
+    
+    .data-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .data-table td {
+        padding: 15px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .data-table tbody tr:hover {
+        background: #f7fafc;
+    }
+    
+    .data-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .item-image {
+        width: 80px;
+        height: 80px;
+        object-fit: contain;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        background: white;
+        padding: 5px;
+    }
+    
+    .item-image-placeholder {
+        width: 80px;
+        height: 80px;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        background: #f7fafc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #cbd5e0;
+        font-size: 0.75rem;
+    }
+    
+    .item-name-cell {
+        max-width: 300px;
+    }
+    
+    .item-name {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 5px;
+    }
+    
+    .item-upc {
+        font-size: 0.875rem;
+        color: #718096;
+    }
+    
+    .btn-small {
+        padding: 6px 12px;
+        font-size: 0.875rem;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: inline-block;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-edit {
+        background: #667eea;
+        color: white;
+    }
+    
+    .btn-edit:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+    }
+    
+    .btn-delete {
+        background: #e53e3e;
+        color: white;
+    }
+    
+    .btn-delete:hover {
+        background: #c53030;
+        transform: translateY(-1px);
+    }
+    
+    .btn-add {
+        background: #48bb78;
+        color: white;
+    }
+    
+    .btn-add:hover {
+        background: #38a169;
+        transform: translateY(-1px);
+    }
+    
+    .btn-filter {
+        background: #667eea;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 0.875rem;
+    }
+    
+    .btn-filter:hover {
+        background: #5568d3;
+    }
+    
+    .btn-clear {
+        background: #e2e8f0;
+        color: #4a5568;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 0.875rem;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-clear:hover {
+        background: #cbd5e0;
+    }
+    
+    .no-data {
+        text-align: center;
+        padding: 60px 20px;
+        color: #718096;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-top: 20px;
+        padding: 20px;
+    }
+    
+    .pagination a,
+    .pagination span {
+        padding: 8px 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #4a5568;
+    }
+    
+    .pagination a:hover {
+        background: #f7fafc;
+    }
+    
+    .pagination .current {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="header-actions">
+        <h2 style="margin: 0; color: #2d3748;">All SPINS Items</h2>
+        {% if session.is_admin %}
+        <a href="{{ url_for('spins.create_item') }}" class="btn-small btn-add">➕ Add Item</a>
+        {% endif %}
+    </div>
+    
+    <!-- Filter Section -->
+    <div class="filter-section">
+        <form method="GET" action="{{ url_for('spins.items_list') }}">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="search">Search in Title</label>
+                    <input type="text" id="search" name="search" value="{{ current_filters.search or '' }}" placeholder="Search items...">
+                </div>
+                <div class="filter-group">
+                    <label for="brand_id">Filter by Brand</label>
+                    <select id="brand_id" name="brand_id">
+                        <option value="">All Brands</option>
+                        {% for brand in brands %}
+                        <option value="{{ brand.id }}" {% if current_filters.brand_id == brand.id %}selected{% endif %}>{{ brand.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="filter-actions">
+                <button type="submit" class="btn-filter">🔍 Apply Filters</button>
+                <a href="{{ url_for('spins.items_list') }}" class="btn-clear">Clear</a>
+            </div>
+        </form>
+    </div>
+    
+    {% if items %}
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Image</th>
+                    <th>Name</th>
+                    <th>Brand</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item_data in items %}
+                <tr>
+                    <td>
+                        {% if item_data.item.img_url %}
+                        <img src="{{ item_data.item.img_url }}" alt="{{ item_data.item.name }}" class="item-image" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                        <div class="item-image-placeholder" style="display: none;">No Image</div>
+                        {% else %}
+                        <div class="item-image-placeholder">No Image</div>
+                        {% endif %}
+                    </td>
+                    <td class="item-name-cell">
+                        <div class="item-name">{{ item_data.item.scrapped_name or item_data.item.name }}</div>
+                        {% if item_data.item.scrapped_name and item_data.item.scrapped_name != item_data.item.name %}
+                        <div style="font-size: 0.75rem; color: #a0aec0; font-style: italic; margin-top: 3px;">Original: {{ item_data.item.name }}</div>
+                        {% endif %}
+                        <div class="item-upc"><strong>UPC:</strong> {{ item_data.item.upc }}</div>
+                    </td>
+                    <td>{{ item_data.brand.name if item_data.brand else '-' }}</td>
+                    <td>
+                        <div style="display: flex; gap: 5px; flex-wrap: nowrap;">
+                            {% if item_data.item.scrapped_json %}
+                            <a href="{{ url_for('spins.view_item_scraped_data', item_id=item_data.item.id) }}" class="btn-small btn-edit" style="background: #48bb78;">👁️ View</a>
+                            {% endif %}
+                            <form method="POST" action="{{ url_for('spins.scrape_item', item_id=item_data.item.id) }}" style="display: inline;">
+                                <button type="submit" class="btn-small btn-edit" style="background: #ed8936;">⚡ RapidAPI</button>
+                            </form>
+                            {% if session.is_admin %}
+                            <a href="{{ url_for('spins.edit_item', item_id=item_data.item.id) }}" class="btn-small btn-edit">Edit</a>
+                            <form method="POST" action="{{ url_for('spins.delete_item', item_id=item_data.item.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete item {{ item_data.item.name }}?');">
+                                <button type="submit" class="btn-small btn-delete">Delete</button>
+                            </form>
+                            {% endif %}
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% if pagination.pages > 1 %}
+    <div class="pagination">
+        {% if pagination.has_prev %}
+        <a href="{{ url_for('spins.items_list', page=pagination.prev_num, **current_filters) }}">« Previous</a>
+        {% endif %}
+        
+        {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if page_num %}
+                {% if page_num == pagination.page %}
+                <span class="current">{{ page_num }}</span>
+                {% else %}
+                <a href="{{ url_for('spins.items_list', page=page_num, **current_filters) }}">{{ page_num }}</a>
+                {% endif %}
+            {% else %}
+                <span>...</span>
+            {% endif %}
+        {% endfor %}
+        
+        {% if pagination.has_next %}
+        <a href="{{ url_for('spins.items_list', page=pagination.next_num, **current_filters) }}">Next »</a>
+        {% endif %}
+    </div>
+    {% endif %}
+    {% else %}
+    <div class="no-data">
+        <h3>No items found</h3>
+        <p>{% if current_filters.search or current_filters.brand_id %}Try adjusting your filters.{% else %}Create your first item to get started.{% endif %}</p>
+        {% if session.is_admin %}
+        <a href="{{ url_for('spins.create_item') }}" class="btn-small btn-add" style="margin-top: 20px;">➕ Add Item</a>
+        {% endif %}
+    </div>
+    {% endif %}
+{% endblock %}
+

@@ -1,0 +1,1041 @@
+{% extends "base.html" %}
+
+{% block page_title_text %}{{ customer.name }}{% endblock %}
+
+{% block extra_styles %}
+    .customer-header {
+        margin-bottom: 30px;
+    }
+    
+    .customer-name {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin-bottom: 10px;
+    }
+    
+    .customer-description {
+        color: #718096;
+        font-size: 1rem;
+        margin-bottom: 20px;
+    }
+    
+    .revenue-boxes {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .revenue-box {
+        background: white;
+        border-radius: 8px;
+        padding: 25px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid #667eea;
+    }
+    
+    .revenue-box h3 {
+        margin: 0 0 10px 0;
+        color: #4a5568;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .revenue-box .value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #2d3748;
+    }
+    
+    .tabs {
+        display: flex;
+        border-bottom: 2px solid #e2e8f0;
+        margin-bottom: 20px;
+    }
+    
+    .tab {
+        padding: 12px 24px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #718096;
+        border-bottom: 3px solid transparent;
+        transition: all 0.2s;
+    }
+    
+    .tab:hover {
+        color: #667eea;
+    }
+    
+    .tab.active {
+        color: #667eea;
+        border-bottom-color: #667eea;
+    }
+    
+    .tab-content {
+        display: none;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+    
+    .assortment-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .assortment-table thead {
+        background: #667eea;
+        color: white;
+    }
+    
+    .assortment-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .assortment-table td {
+        padding: 15px;
+        border-bottom: 1px solid #e2e8f0;
+        vertical-align: middle;
+    }
+    
+    .assortment-table tbody tr:hover {
+        background: #f7fafc;
+    }
+    
+    .item-img {
+        max-width: 60px;
+        max-height: 60px;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        border-radius: 4px;
+        margin-right: 10px;
+        vertical-align: middle;
+    }
+    
+    .item-code-cell {
+        display: flex;
+        align-items: center;
+    }
+    
+    .yoy-growth-cell {
+        display: flex;
+        align-items: center;
+        height: 100%;
+        gap: 8px;
+    }
+    
+    .yoy-flag {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+    
+    .yoy-flag.green {
+        background-color: #48bb78;
+    }
+    
+    .yoy-flag.blue {
+        background-color: #4299e1;
+    }
+    
+    .yoy-flag.orange {
+        background-color: #ed8936;
+    }
+    
+    .yoy-flag.red {
+        background-color: #e53e3e;
+    }
+    
+    .chart-container {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        position: relative;
+        height: 400px;
+    }
+    
+    .chart-loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 400px;
+        color: #718096;
+        font-size: 16px;
+    }
+    
+    .under-construction {
+        text-align: center;
+        padding: 60px 20px;
+        color: #718096;
+    }
+    
+    .tickets-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .btn-create-ticket {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.875rem;
+        transition: background 0.2s;
+    }
+    
+    .btn-create-ticket:hover {
+        background: #5568d3;
+    }
+    
+    .tickets-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .ticket-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid #667eea;
+        transition: transform 0.2s, box-shadow 0.2s;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .ticket-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    .ticket-card.closed {
+        border-left-color: #e53e3e;
+        opacity: 0.8;
+    }
+    
+    .ticket-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+    }
+    
+    .ticket-card-description {
+        color: #2d3748;
+        font-size: 0.9375rem;
+        line-height: 1.6;
+        margin-bottom: 15px;
+        flex-grow: 1;
+        word-wrap: break-word;
+    }
+    
+    .ticket-card-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 15px;
+        font-size: 0.875rem;
+        color: #718096;
+    }
+    
+    .ticket-card-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .ticket-card-meta-label {
+        font-weight: 600;
+        color: #4a5568;
+    }
+    
+    .ticket-card-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: auto;
+        padding-top: 15px;
+        border-top: 1px solid #e2e8f0;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        cursor: pointer;
+        transition: opacity 0.2s;
+    }
+    
+    .status-badge:hover {
+        opacity: 0.8;
+    }
+    
+    .status-badge.opened {
+        background: #c6f6d5;
+        color: #22543d;
+    }
+    
+    .status-badge.closed {
+        background: #fed7d7;
+        color: #742a2a;
+    }
+    
+    .btn-edit {
+        background: #4299e1;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 0.875rem;
+        transition: background 0.2s;
+    }
+    
+    .btn-edit:hover {
+        background: #3182ce;
+    }
+    
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        overflow: auto;
+    }
+    
+    .modal.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal-content {
+        background-color: white;
+        padding: 30px;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 600px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        max-height: 90vh;
+        overflow-y: auto;
+    }
+    
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .modal-header h3 {
+        margin: 0;
+        color: #2d3748;
+    }
+    
+    .close-modal {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #718096;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .close-modal:hover {
+        color: #2d3748;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        color: #4a5568;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+    
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 0.875rem;
+        box-sizing: border-box;
+    }
+    
+    .form-group textarea {
+        min-height: 100px;
+        resize: vertical;
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    
+    .btn-cancel {
+        background: #e2e8f0;
+        color: #4a5568;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+    
+    .btn-cancel:hover {
+        background: #cbd5e0;
+    }
+    
+    .btn-submit {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+    
+    .btn-submit:hover {
+        background: #5568d3;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="customer-header">
+        {% if customer.description %}
+        <p class="customer-description">{{ customer.description }}</p>
+        {% endif %}
+    </div>
+    
+    <div class="revenue-boxes">
+        <div class="revenue-box">
+            <h3>Revenues 2024</h3>
+            <div class="value">${{ "{:,.0f}".format(total_rev_2024) }}</div>
+        </div>
+        <div class="revenue-box">
+            <h3>Revenues 2025</h3>
+            <div class="value">${{ "{:,.0f}".format(total_rev_2025) }}</div>
+        </div>
+    </div>
+    
+    <div class="tabs">
+        <button class="tab active" data-tab="assortment">Assortment</button>
+        <button class="tab" data-tab="dashboard">Dashboard</button>
+        <button class="tab" data-tab="tickets">Tickets</button>
+    </div>
+    
+    <div id="assortment" class="tab-content active">
+        <table class="assortment-table">
+            <thead>
+                <tr>
+                    <th>Item</th>
+                    <th>Revenues 2024</th>
+                    <th>Revenues 2025</th>
+                    <th>YoY Growth</th>
+                </tr>
+            </thead>
+            <tbody id="assortment-tbody">
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 40px;">
+                        <div class="chart-loading">Loading assortment data...</div>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div id="dashboard" class="tab-content">
+        <div class="chart-container">
+            <canvas id="monthlyChart"></canvas>
+        </div>
+    </div>
+    
+    <div id="tickets" class="tab-content">
+        <div class="tickets-header">
+            <h3 style="margin: 0; color: #2d3748;">Tickets</h3>
+            <button class="btn-create-ticket" onclick="openCreateTicketModal()">+ Create Ticket</button>
+        </div>
+        <div id="tickets-container" class="tickets-container">
+            <div style="text-align: center; padding: 40px;">
+                <div class="chart-loading">Loading tickets...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Create Ticket Modal -->
+    <div id="createTicketModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Create Ticket</h3>
+                <button class="close-modal" onclick="closeCreateTicketModal()">&times;</button>
+            </div>
+            <form id="createTicketForm" onsubmit="createTicket(event)">
+                <div class="form-group">
+                    <label for="create_description">Description *</label>
+                    <textarea id="create_description" name="description" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="create_due_date">Due Date</label>
+                    <input type="date" id="create_due_date" name="due_date">
+                </div>
+                <div class="form-group">
+                    <label for="create_owner_id">Owner *</label>
+                    <select id="create_owner_id" name="owner_id" required>
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="create_ticket_type_id">Ticket Type</label>
+                    <select id="create_ticket_type_id" name="ticket_type_id">
+                        <option value="">None</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" onclick="closeCreateTicketModal()">Cancel</button>
+                    <button type="submit" class="btn-submit">Create</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Edit Ticket Modal -->
+    <div id="editTicketModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Edit Ticket</h3>
+                <button class="close-modal" onclick="closeEditTicketModal()">&times;</button>
+            </div>
+            <form id="editTicketForm" onsubmit="editTicket(event)">
+                <input type="hidden" id="edit_ticket_id" name="ticket_id">
+                <div class="form-group">
+                    <label for="edit_description">Description *</label>
+                    <textarea id="edit_description" name="description" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="edit_due_date">Due Date</label>
+                    <input type="date" id="edit_due_date" name="due_date">
+                </div>
+                <div class="form-group">
+                    <label for="edit_owner_id">Owner *</label>
+                    <select id="edit_owner_id" name="owner_id" required>
+                        <option value="">Loading...</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="edit_ticket_type_id">Ticket Type</label>
+                    <select id="edit_ticket_type_id" name="ticket_type_id">
+                        <option value="">None</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn-cancel" onclick="closeEditTicketModal()">Cancel</button>
+                    <button type="submit" class="btn-submit">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+    const customerId = {{ customer.id }};
+    const currentUserId = {{ session.user_id if session.user_id else 'null' }};
+    let monthlyChart = null;
+    
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            const tabName = this.getAttribute('data-tab');
+            
+            // Update tab buttons
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Update tab content
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.getElementById(tabName).classList.add('active');
+            
+            // Load data for dashboard tab
+            if (tabName === 'dashboard' && !monthlyChart) {
+                loadMonthlyChart();
+            }
+            
+            // Load data for tickets tab
+            if (tabName === 'tickets') {
+                loadTickets();
+            }
+        });
+    });
+    
+    // Ticket management
+    let usersList = [];
+    let ticketTypesList = [];
+    
+    function loadUsers() {
+        fetch('/crm/api/users')
+            .then(response => response.json())
+            .then(data => {
+                usersList = data.users;
+                updateUserDropdowns();
+            })
+            .catch(error => {
+                console.error('Error loading users:', error);
+            });
+    }
+    
+    function loadTicketTypes() {
+        fetch('/crm/api/ticket-types')
+            .then(response => response.json())
+            .then(data => {
+                ticketTypesList = data.ticket_types;
+                updateTicketTypeDropdowns();
+            })
+            .catch(error => {
+                console.error('Error loading ticket types:', error);
+            });
+    }
+    
+    function updateUserDropdowns() {
+        const createOwnerSelect = document.getElementById('create_owner_id');
+        const editOwnerSelect = document.getElementById('edit_owner_id');
+        
+        [createOwnerSelect, editOwnerSelect].forEach(select => {
+            if (select) {
+                select.innerHTML = '<option value="">Select owner...</option>';
+                usersList.forEach(user => {
+                    const option = document.createElement('option');
+                    option.value = user.id;
+                    option.textContent = user.username;
+                    select.appendChild(option);
+                });
+            }
+        });
+        
+        // Set default owner to current user for create dropdown
+        if (createOwnerSelect && currentUserId) {
+            createOwnerSelect.value = currentUserId;
+        }
+    }
+    
+    function updateTicketTypeDropdowns() {
+        const createTypeSelect = document.getElementById('create_ticket_type_id');
+        const editTypeSelect = document.getElementById('edit_ticket_type_id');
+        
+        [createTypeSelect, editTypeSelect].forEach(select => {
+            if (select) {
+                const currentValue = select.value;
+                select.innerHTML = '<option value="">None</option>';
+                ticketTypesList.forEach(type => {
+                    const option = document.createElement('option');
+                    option.value = type.id;
+                    option.textContent = type.name;
+                    select.appendChild(option);
+                });
+                if (currentValue) {
+                    select.value = currentValue;
+                }
+            }
+        });
+    }
+    
+    function loadTickets() {
+        fetch(`/crm/customers/${customerId}/tickets`)
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('tickets-container');
+                container.innerHTML = '';
+                
+                if (data.tickets && data.tickets.length > 0) {
+                    data.tickets.forEach(ticket => {
+                        const card = document.createElement('div');
+                        card.className = `ticket-card ${ticket.status === 'closed' ? 'closed' : ''}`;
+                        
+                        const statusClass = ticket.status === 'opened' ? 'opened' : 'closed';
+                        const statusText = ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1);
+                        
+                        const dueDate = ticket.due_date ? new Date(ticket.due_date).toLocaleDateString() : 'No due date';
+                        const createdDate = ticket.created_at ? new Date(ticket.created_at).toLocaleDateString() : '-';
+                        
+                        const isOverdue = ticket.due_date && new Date(ticket.due_date) < new Date() && ticket.status === 'opened';
+                        const dueDateClass = isOverdue ? ' style="color: #e53e3e; font-weight: 600;"' : '';
+                        
+                        card.innerHTML = `
+                            <div class="ticket-card-header">
+                                <span class="status-badge ${statusClass}" onclick="toggleTicketStatus(${ticket.id})" title="Click to toggle">
+                                    ${statusText}
+                                </span>
+                                ${ticket.ticket_type ? `<span style="font-size: 0.75rem; color: #718096; background: #f7fafc; padding: 4px 8px; border-radius: 4px;">${escapeHtml(ticket.ticket_type)}</span>` : ''}
+                            </div>
+                            <div class="ticket-card-description">
+                                ${escapeHtml(ticket.description)}
+                            </div>
+                            <div class="ticket-card-meta">
+                                <div class="ticket-card-meta-item">
+                                    <span class="ticket-card-meta-label">Due:</span>
+                                    <span${dueDateClass}>${dueDate}</span>
+                                </div>
+                                <div class="ticket-card-meta-item">
+                                    <span class="ticket-card-meta-label">Owner:</span>
+                                    <span>${escapeHtml(ticket.owner)}</span>
+                                </div>
+                                <div class="ticket-card-meta-item">
+                                    <span class="ticket-card-meta-label">Creator:</span>
+                                    <span>${escapeHtml(ticket.creator)}</span>
+                                </div>
+                                <div class="ticket-card-meta-item">
+                                    <span class="ticket-card-meta-label">Created:</span>
+                                    <span>${createdDate}</span>
+                                </div>
+                            </div>
+                            <div class="ticket-card-actions">
+                                <button class="btn-edit" onclick="openEditTicketModal(${ticket.id})">Edit</button>
+                            </div>
+                        `;
+                        container.appendChild(card);
+                    });
+                } else {
+                    container.innerHTML = '<div style="text-align: center; padding: 40px; color: #718096;">No tickets found</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading tickets:', error);
+                document.getElementById('tickets-container').innerHTML = 
+                    '<div style="text-align: center; padding: 40px; color: #e53e3e;">Error loading tickets</div>';
+            });
+    }
+    
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
+    function openCreateTicketModal() {
+        document.getElementById('createTicketModal').classList.add('active');
+        document.getElementById('createTicketForm').reset();
+        
+        // Set owner to current user by default
+        const createOwnerSelect = document.getElementById('create_owner_id');
+        if (createOwnerSelect && currentUserId) {
+            createOwnerSelect.value = currentUserId;
+        }
+    }
+    
+    function closeCreateTicketModal() {
+        document.getElementById('createTicketModal').classList.remove('active');
+    }
+    
+    function createTicket(event) {
+        event.preventDefault();
+        
+        const formData = new FormData(event.target);
+        formData.append('customer_id', customerId);
+        
+        fetch('/crm/tickets/create', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                closeCreateTicketModal();
+                loadTickets();
+            } else {
+                alert('Error creating ticket: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error creating ticket:', error);
+            alert('Error creating ticket');
+        });
+    }
+    
+    function toggleTicketStatus(ticketId) {
+        fetch(`/crm/tickets/${ticketId}/toggle-status`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                loadTickets();
+            } else {
+                alert('Error toggling ticket status');
+            }
+        })
+        .catch(error => {
+            console.error('Error toggling ticket status:', error);
+            alert('Error toggling ticket status');
+        });
+    }
+    
+    function openEditTicketModal(ticketId) {
+        fetch(`/crm/customers/${customerId}/tickets`)
+            .then(response => response.json())
+            .then(data => {
+                const ticket = data.tickets.find(t => t.id === ticketId);
+                if (ticket) {
+                    document.getElementById('edit_ticket_id').value = ticket.id;
+                    document.getElementById('edit_description').value = ticket.description;
+                    document.getElementById('edit_due_date').value = ticket.due_date || '';
+                    
+                    // Set owner - need to find user ID by username
+                    const owner = usersList.find(u => u.username === ticket.owner);
+                    if (owner) {
+                        document.getElementById('edit_owner_id').value = owner.id;
+                    }
+                    
+                    // Set ticket type - need to find type ID by name
+                    if (ticket.ticket_type) {
+                        const type = ticketTypesList.find(t => t.name === ticket.ticket_type);
+                        if (type) {
+                            document.getElementById('edit_ticket_type_id').value = type.id;
+                        }
+                    }
+                    
+                    document.getElementById('editTicketModal').classList.add('active');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading ticket:', error);
+                alert('Error loading ticket');
+            });
+    }
+    
+    function closeEditTicketModal() {
+        document.getElementById('editTicketModal').classList.remove('active');
+    }
+    
+    function editTicket(event) {
+        event.preventDefault();
+        
+        const ticketId = document.getElementById('edit_ticket_id').value;
+        const formData = new FormData(event.target);
+        
+        fetch(`/crm/tickets/${ticketId}/edit`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                closeEditTicketModal();
+                loadTickets();
+            } else {
+                alert('Error updating ticket: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(error => {
+            console.error('Error updating ticket:', error);
+            alert('Error updating ticket');
+        });
+    }
+    
+    // Load users and ticket types on page load
+    loadUsers();
+    loadTicketTypes();
+    
+    // Load assortment data
+    function loadAssortment() {
+        fetch(`/core/customers/${customerId}/api/assortment`)
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.getElementById('assortment-tbody');
+                tbody.innerHTML = '';
+                
+                if (data.items && data.items.length > 0) {
+                    data.items.forEach(item => {
+                        const row = document.createElement('tr');
+                        
+                        // Build item cell with image and name
+                        let itemCell = `<div class="item-code-cell">`;
+                        if (item.asin_img_url) {
+                            itemCell += `<img src="${item.asin_img_url}" alt="${item.essor_name || ''}" class="item-img" onerror="this.style.display='none'">`;
+                        }
+                        itemCell += `<span>${item.essor_name || '-'}</span></div>`;
+                        
+                        // Calculate YoY growth flag
+                        let yoyFlag = '';
+                        let yoyText = '';
+                        if (item.yoy_growth !== null && item.yoy_growth !== undefined) {
+                            const growth = item.yoy_growth;
+                            if (growth > 10) {
+                                yoyFlag = '<span class="yoy-flag green" title="YoY Growth > 10%"></span>';
+                                yoyText = `+${growth.toFixed(1)}%`;
+                            } else if (growth >= 0 && growth <= 10) {
+                                yoyFlag = '<span class="yoy-flag blue" title="YoY Growth 0-10%"></span>';
+                                yoyText = `+${growth.toFixed(1)}%`;
+                            } else if (growth >= -10 && growth < 0) {
+                                yoyFlag = '<span class="yoy-flag orange" title="YoY Growth -10% to 0%"></span>';
+                                yoyText = `${growth.toFixed(1)}%`;
+                            } else {
+                                yoyFlag = '<span class="yoy-flag red" title="YoY Growth < -10%"></span>';
+                                yoyText = `${growth.toFixed(1)}%`;
+                            }
+                        } else {
+                            yoyText = '-';
+                        }
+                        
+                        row.innerHTML = `
+                            <td>${itemCell}</td>
+                            <td>$${Math.round(item.revenues_2024).toLocaleString()}</td>
+                            <td>$${Math.round(item.revenues_2025).toLocaleString()}</td>
+                            <td><div class="yoy-growth-cell">${yoyFlag}${yoyText}</div></td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px; color: #718096;">No assortment data found</td></tr>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading assortment:', error);
+                document.getElementById('assortment-tbody').innerHTML = 
+                    '<tr><td colspan="4" style="text-align: center; padding: 40px; color: #e53e3e;">Error loading assortment data</td></tr>';
+            });
+    }
+    
+    // Load monthly chart
+    function loadMonthlyChart() {
+        fetch(`/core/customers/${customerId}/api/monthly-revenues`)
+            .then(response => response.json())
+            .then(data => {
+                const ctx = document.getElementById('monthlyChart').getContext('2d');
+                
+                // Prepare data for Chart.js
+                const months_2024 = data.months.filter(m => m.year === 2024);
+                const months_2025 = data.months.filter(m => m.year === 2025);
+                
+                const labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const revenues_2024 = months_2024.map(m => m.revenues);
+                const revenues_2025 = months_2025.map(m => m.revenues);
+                
+                if (monthlyChart) {
+                    monthlyChart.destroy();
+                }
+                
+                monthlyChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: '2024',
+                                data: revenues_2024,
+                                backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                                borderColor: 'rgb(239, 68, 68)',
+                                borderWidth: 1
+                            },
+                            {
+                                label: '2025',
+                                data: revenues_2025,
+                                backgroundColor: 'rgba(59, 130, 246, 0.7)',
+                                borderColor: 'rgb(59, 130, 246)',
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: 'Monthly Revenues',
+                                font: {
+                                    size: 18,
+                                    weight: 'bold'
+                                }
+                            },
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: function(context) {
+                                        return '$' + Math.round(context.parsed.y).toLocaleString();
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        if (value >= 1000000) {
+                                            return '$' + (value / 1000000).toFixed(1) + 'M';
+                                        } else if (value >= 1000) {
+                                            return '$' + (value / 1000).toFixed(1) + 'K';
+                                        }
+                                        return '$' + value.toLocaleString();
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(error => {
+                console.error('Error loading monthly chart:', error);
+                document.querySelector('.chart-container').innerHTML = 
+                    '<div class="chart-loading" style="color: #e53e3e;">Error loading chart data</div>';
+            });
+    }
+    
+    // Load initial data
+    loadAssortment();
+</script>
+{% endblock %}
+

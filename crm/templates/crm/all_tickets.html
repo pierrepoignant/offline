@@ -1,0 +1,244 @@
+{% extends "base.html" %}
+
+{% block page_title_text %}🎫 All Tickets{% endblock %}
+
+{% block extra_styles %}
+    .filters-container {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .filters-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        align-items: end;
+    }
+    
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .filter-group label {
+        margin-bottom: 5px;
+        font-weight: 600;
+        color: #4a5568;
+        font-size: 0.875rem;
+    }
+    
+    .filter-group select {
+        padding: 10px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 0.875rem;
+    }
+    
+    .filter-group select:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .btn-filter {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.875rem;
+        transition: background 0.2s;
+    }
+    
+    .btn-filter:hover {
+        background: #5568d3;
+    }
+    
+    .tickets-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .ticket-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid #667eea;
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .ticket-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    .ticket-card.closed {
+        border-left-color: #e53e3e;
+        opacity: 0.8;
+    }
+    
+    .ticket-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 15px;
+    }
+    
+    .ticket-card-description {
+        color: #2d3748;
+        font-size: 0.9375rem;
+        line-height: 1.6;
+        margin-bottom: 15px;
+        word-wrap: break-word;
+    }
+    
+    .ticket-card-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-bottom: 15px;
+        font-size: 0.875rem;
+        color: #718096;
+    }
+    
+    .ticket-card-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .ticket-card-meta-label {
+        font-weight: 600;
+        color: #4a5568;
+    }
+    
+    .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .status-badge.opened {
+        background: #c6f6d5;
+        color: #22543d;
+    }
+    
+    .status-badge.closed {
+        background: #fed7d7;
+        color: #742a2a;
+    }
+    
+    .btn-link {
+        color: #667eea;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+    
+    .btn-link:hover {
+        text-decoration: underline;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="filters-container">
+        <form method="GET" class="filters-form">
+            <div class="filter-group">
+                <label for="customer_id">Customer</label>
+                <select id="customer_id" name="customer_id">
+                    <option value="">All Customers</option>
+                    {% for customer in customers %}
+                    <option value="{{ customer.id }}" {% if selected_customer_id == customer.id %}selected{% endif %}>
+                        {{ customer.channel.name }} - {{ customer.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="owner_id">Owner</label>
+                <select id="owner_id" name="owner_id">
+                    <option value="">All Owners</option>
+                    {% for user in users %}
+                    <option value="{{ user.id }}" {% if selected_owner_id == user.id %}selected{% endif %}>
+                        {{ user.username }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="status">Status</label>
+                <select id="status" name="status">
+                    <option value="">All Statuses</option>
+                    <option value="opened" {% if selected_status == 'opened' %}selected{% endif %}>Opened</option>
+                    <option value="closed" {% if selected_status == 'closed' %}selected{% endif %}>Closed</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <button type="submit" class="btn-filter">Apply Filters</button>
+            </div>
+        </form>
+    </div>
+    
+    <div class="tickets-container">
+        {% if tickets %}
+            {% for ticket in tickets %}
+            <div class="ticket-card {{ 'closed' if ticket.status == 'closed' else '' }}">
+                <div class="ticket-card-header">
+                    <span class="status-badge {{ ticket.status }}">{{ ticket.status|title }}</span>
+                    {% if ticket.ticket_type %}
+                    <span style="font-size: 0.75rem; color: #718096; background: #f7fafc; padding: 4px 8px; border-radius: 4px;">
+                        {{ ticket.ticket_type.name }}
+                    </span>
+                    {% endif %}
+                </div>
+                <div class="ticket-card-description">
+                    {{ ticket.description }}
+                </div>
+                <div class="ticket-card-meta">
+                    <div class="ticket-card-meta-item">
+                        <span class="ticket-card-meta-label">Customer:</span>
+                        <a href="{{ url_for('core.customer_detail', customer_id=ticket.customer_id) }}" class="btn-link">
+                            {{ ticket.customer.channel.name }} - {{ ticket.customer.name }}
+                        </a>
+                    </div>
+                    <div class="ticket-card-meta-item">
+                        <span class="ticket-card-meta-label">Due:</span>
+                        <span {% if ticket.due_date and ticket.due_date < today and ticket.status == 'opened' %}style="color: #e53e3e; font-weight: 600;"{% endif %}>
+                            {{ ticket.due_date.strftime('%Y-%m-%d') if ticket.due_date else 'No due date' }}
+                        </span>
+                    </div>
+                    <div class="ticket-card-meta-item">
+                        <span class="ticket-card-meta-label">Owner:</span>
+                        <span>{{ ticket.owner.username if ticket.owner else 'Unknown' }}</span>
+                    </div>
+                    <div class="ticket-card-meta-item">
+                        <span class="ticket-card-meta-label">Creator:</span>
+                        <span>{{ ticket.creator.username if ticket.creator else 'Unknown' }}</span>
+                    </div>
+                    <div class="ticket-card-meta-item">
+                        <span class="ticket-card-meta-label">Created:</span>
+                        <span>{{ ticket.created_at.strftime('%Y-%m-%d') if ticket.created_at else '-' }}</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div style="text-align: center; padding: 40px; color: #718096; background: white; border-radius: 8px;">
+                No tickets found
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
+

@@ -1,0 +1,353 @@
+{% extends "base.html" %}
+
+
+
+{% block page_title_text %}👥 Customers{% endblock %}
+
+{% block extra_styles %}
+    .header-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .data-table thead {
+        background: #667eea;
+        color: white;
+    }
+    
+    .data-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .data-table td {
+        padding: 15px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .data-table tbody tr:hover {
+        background: #f7fafc;
+    }
+    
+    .data-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .btn-small {
+        padding: 6px 12px;
+        font-size: 0.875rem;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: inline-block;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-edit {
+        background: #667eea;
+        color: white;
+    }
+    
+    .btn-edit:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+    }
+    
+    .btn-delete {
+        background: #e53e3e;
+        color: white;
+    }
+    
+    .btn-delete:hover {
+        background: #c53030;
+        transform: translateY(-1px);
+    }
+    
+    .btn-add {
+        background: #48bb78;
+        color: white;
+    }
+    
+    .btn-add:hover {
+        background: #38a169;
+        transform: translateY(-1px);
+    }
+    
+    .no-data {
+        text-align: center;
+        padding: 60px 20px;
+        color: #718096;
+    }
+    
+    .customer-type-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: white;
+    }
+    
+    .yoy-growth-cell {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .yoy-flag {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+    
+    .yoy-flag.green {
+        background-color: #48bb78;
+    }
+    
+    .yoy-flag.blue {
+        background-color: #4299e1;
+    }
+    
+    .yoy-flag.orange {
+        background-color: #ed8936;
+    }
+    
+    .yoy-flag.red {
+        background-color: #e53e3e;
+    }
+    
+    .data-table th:nth-child(5),
+    .data-table td:nth-child(5),
+    .data-table th:nth-child(6),
+    .data-table td:nth-child(6) {
+        text-align: right;
+    }
+    
+    .filters-container {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .filters-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        align-items: end;
+    }
+    
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .filter-group label {
+        margin-bottom: 5px;
+        font-weight: 600;
+        color: #4a5568;
+        font-size: 0.875rem;
+    }
+    
+    .filter-group select {
+        padding: 10px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 0.875rem;
+    }
+    
+    .filter-group select:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .btn-filter {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.875rem;
+        transition: background 0.2s;
+    }
+    
+    .btn-filter:hover {
+        background: #5568d3;
+    }
+    
+    .btn-clear {
+        background: #e2e8f0;
+        color: #4a5568;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.875rem;
+        transition: background 0.2s;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-clear:hover {
+        background: #cbd5e0;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="header-actions">
+        <h2 style="margin: 0; color: #2d3748;">All Customers</h2>
+        {% if session.is_admin %}
+        <a href="{{ url_for('core.create_location') }}" class="btn-small btn-add">➕ Add Customer</a>
+        {% endif %}
+    </div>
+    
+    <div class="filters-container">
+        <form method="GET" class="filters-form">
+            <div class="filter-group">
+                <label for="channel_id">Channel</label>
+                <select id="channel_id" name="channel_id">
+                    <option value="">All Channels</option>
+                    {% for channel in channels %}
+                    <option value="{{ channel.id }}" {% if selected_channel_id == channel.id %}selected{% endif %}>
+                        {{ channel.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="customer_type_id">Customer Type</label>
+                <select id="customer_type_id" name="customer_type_id">
+                    <option value="">All Customer Types</option>
+                    {% for customer_type in customer_types %}
+                    <option value="{{ customer_type.id }}" {% if selected_customer_type_id == customer_type.id %}selected{% endif %}>
+                        {{ customer_type.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="brand_id">Brand</label>
+                <select id="brand_id" name="brand_id">
+                    <option value="">All Brands</option>
+                    {% for brand in brands %}
+                    <option value="{{ brand.id }}" {% if selected_brand_id == brand.id %}selected{% endif %}>
+                        {{ brand.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group" style="display: flex; gap: 10px; flex-direction: row;">
+                <button type="submit" class="btn-filter">Apply Filters</button>
+                <a href="{{ url_for('core.customers_list') }}" class="btn-clear">Clear</a>
+            </div>
+        </form>
+    </div>
+    
+    {% if customers %}
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Channel</th>
+                    <th>Name</th>
+                    <th>Customer Type</th>
+                    <th>Brand</th>
+                    <th>Revenues 2024</th>
+                    <th>Revenues 2025</th>
+                    <th>YoY Growth</th>
+                    {% if session.is_admin %}
+                    <th>Actions</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for customer in customers %}
+                <tr>
+                    <td><strong>{{ customer.channel.name }}</strong></td>
+                    <td><a href="{{ url_for('core.customer_detail', customer_id=customer.id) }}" style="color: #667eea; text-decoration: none; font-weight: 600;">{{ customer.name }}</a></td>
+                    <td>
+                        {% if customer.customer_type %}
+                            <span class="customer-type-badge" style="background-color: {{ customer.customer_type.color or '#667eea' }};">
+                                {{ customer.customer_type.name }}
+                            </span>
+                        {% else %}
+                            <span style="color: #a0aec0;">-</span>
+                        {% endif %}
+                    </td>
+                    <td>{% if customer.brand %}{{ customer.brand.name }}{% else %}<span style="color: #a0aec0;">-</span>{% endif %}</td>
+                    <td>${{ "{:,.0f}".format(customer_revenues[customer.id]['2024']) }}</td>
+                    <td>${{ "{:,.0f}".format(customer_revenues[customer.id]['2025']) }}</td>
+                    <td>
+                        {% set yoy = customer_revenues[customer.id]['yoy_growth'] %}
+                        {% if yoy is not none %}
+                            <div class="yoy-growth-cell">
+                                {% if yoy > 10 %}
+                                    <span class="yoy-flag green" title="YoY Growth > 10%"></span>
+                                    <span>+{{ "{:.1f}".format(yoy) }}%</span>
+                                {% elif yoy >= 0 and yoy <= 10 %}
+                                    <span class="yoy-flag blue" title="YoY Growth 0-10%"></span>
+                                    <span>+{{ "{:.1f}".format(yoy) }}%</span>
+                                {% elif yoy >= -10 and yoy < 0 %}
+                                    <span class="yoy-flag orange" title="YoY Growth -10% to 0%"></span>
+                                    <span>{{ "{:.1f}".format(yoy) }}%</span>
+                                {% else %}
+                                    <span class="yoy-flag red" title="YoY Growth < -10%"></span>
+                                    <span>{{ "{:.1f}".format(yoy) }}%</span>
+                                {% endif %}
+                            </div>
+                        {% else %}
+                            <span>-</span>
+                        {% endif %}
+                    </td>
+                    {% if session.is_admin %}
+                    <td>
+                        <a href="{{ url_for('core.edit_location', location_id=customer.id) }}" class="btn-small btn-edit">Edit</a>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="no-data">
+        <h3>No customers found</h3>
+        <p>Create your first customer to get started.</p>
+        {% if session.is_admin %}
+        <a href="{{ url_for('core.create_location') }}" class="btn-small btn-add" style="margin-top: 20px;">➕ Add Customer</a>
+        {% endif %}
+    </div>
+    {% endif %}
+{% endblock %}
+

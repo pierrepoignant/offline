@@ -1,0 +1,278 @@
+{% extends "base.html" %}
+
+
+
+{% block page_title_text %}{% if netsuite_code %}Edit Netsuite Code{% else %}Add Netsuite Code{% endif %}{% endblock %}
+
+{% block extra_styles %}
+    .form-container {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        max-width: 600px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #4a5568;
+    }
+    
+    .form-group input[type="text"],
+    .form-group select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 30px;
+    }
+    
+    .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-primary {
+        background: #667eea;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background: #e2e8f0;
+        color: #4a5568;
+    }
+    
+    .btn-secondary:hover {
+        background: #cbd5e0;
+    }
+    
+    .info-box {
+        background: #e6fffa;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        border-left: 4px solid #38b2ac;
+    }
+    
+    .info-box p {
+        margin: 0;
+        color: #234e52;
+        font-size: 0.875rem;
+    }
+    
+    .customer-tabs {
+        display: flex;
+        border-bottom: 2px solid #e2e8f0;
+        margin-bottom: 15px;
+    }
+    
+    .customer-tab {
+        padding: 10px 20px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #718096;
+        border-bottom: 3px solid transparent;
+        transition: all 0.2s;
+        margin-right: 10px;
+    }
+    
+    .customer-tab:hover {
+        color: #667eea;
+    }
+    
+    .customer-tab.active {
+        color: #667eea;
+        border-bottom-color: #667eea;
+    }
+    
+    .customer-tab-content {
+        display: none;
+    }
+    
+    .customer-tab-content.active {
+        display: block;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="info-box">
+        <p><strong>ℹ️ Note:</strong> When you save this mapping, all existing Netsuite records with this code will be automatically updated to use the selected channel and customer.</p>
+    </div>
+    
+    <div class="form-container">
+        <form method="POST">
+            <div class="form-group">
+                <label for="netsuite_code">Netsuite Code *</label>
+                <input type="text" id="netsuite_code" name="netsuite_code" 
+                       value="{{ netsuite_code.netsuite_code if netsuite_code else '' }}" 
+                       required autofocus maxlength="10" 
+                       style="text-transform: uppercase;">
+                <div style="font-size: 0.875rem; color: #718096; margin-top: 5px;">First 5 characters of retailer name from Netsuite</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="netsuite_name">Netsuite Name</label>
+                <input type="text" id="netsuite_name" name="netsuite_name" 
+                       value="{{ netsuite_code.netsuite_name if netsuite_code and netsuite_code.netsuite_name else '' }}" 
+                       maxlength="255">
+                <div style="font-size: 0.875rem; color: #718096; margin-top: 5px;">Full name from Netsuite (optional)</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="channel_id">Channel</label>
+                <select id="channel_id" name="channel_id">
+                    <option value="">Select a channel (optional)</option>
+                    {% for channel in channels %}
+                    <option value="{{ channel.id }}" {% if netsuite_code and netsuite_code.channel_id == channel.id %}selected{% endif %}>{{ channel.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Customer</label>
+                <div class="customer-tabs">
+                    <button type="button" class="customer-tab active" data-tab="existing" onclick="switchCustomerTab('existing')">
+                        Select Existing
+                    </button>
+                    <button type="button" class="customer-tab" data-tab="new" onclick="switchCustomerTab('new')">
+                        Create New
+                    </button>
+                </div>
+                
+                <input type="hidden" id="customer_option" name="customer_option" value="existing">
+                
+                <div id="existing_customer_group" class="customer-tab-content active">
+                    <select id="customer_id" name="customer_id">
+                        <option value="">Select a customer (optional)</option>
+                        {% for customer in customers %}
+                        <option value="{{ customer.id }}" {% if netsuite_code and netsuite_code.customer_id == customer.id %}selected{% endif %}>{{ customer.channel.name }} - {{ customer.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div id="new_customer_group" class="customer-tab-content">
+                    <div style="margin-bottom: 15px;">
+                        <label for="new_customer_name" style="display: block; margin-bottom: 8px; font-weight: 600; color: #4a5568; font-size: 0.875rem;">Customer Name *</label>
+                        <input type="text" id="new_customer_name" name="new_customer_name" 
+                               placeholder="Enter new customer name" maxlength="255" 
+                               style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 6px; font-size: 14px;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label for="new_customer_brand_id" style="display: block; margin-bottom: 8px; font-weight: 600; color: #4a5568; font-size: 0.875rem;">Brand (optional)</label>
+                        <select id="new_customer_brand_id" name="new_customer_brand_id" 
+                                style="width: 100%; padding: 12px; border: 2px solid #e2e8f0; border-radius: 6px; font-size: 14px;">
+                            <option value="">Select a brand (optional)</option>
+                            {% for brand in brands %}
+                            <option value="{{ brand.id }}">{{ brand.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div style="font-size: 0.875rem; color: #718096; padding: 10px; background: #f7fafc; border-radius: 4px;">
+                        <strong>Note:</strong> New customer will be created for the selected channel above. Brand assignment is optional.
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">{% if netsuite_code %}Update Mapping{% else %}Create Mapping{% endif %}</button>
+                <a href="{{ url_for('netsuite.netsuite_codes_list') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+    
+    <script>
+        // Auto-uppercase netsuite code input
+        document.getElementById('netsuite_code').addEventListener('input', function(e) {
+            this.value = this.value.toUpperCase();
+        });
+        
+        // Switch between existing and new customer tabs
+        function switchCustomerTab(tab) {
+            const existingGroup = document.getElementById('existing_customer_group');
+            const newGroup = document.getElementById('new_customer_group');
+            const customerOption = document.getElementById('customer_option');
+            const tabs = document.querySelectorAll('.customer-tab');
+            
+            tabs.forEach(t => t.classList.remove('active'));
+            document.querySelector(`.customer-tab[data-tab="${tab}"]`).classList.add('active');
+            
+            if (tab === 'existing') {
+                existingGroup.classList.add('active');
+                newGroup.classList.remove('active');
+                customerOption.value = 'existing';
+                document.getElementById('new_customer_name').value = '';
+                document.getElementById('new_customer_brand_id').value = '';
+            } else {
+                existingGroup.classList.remove('active');
+                newGroup.classList.add('active');
+                customerOption.value = 'new';
+                document.getElementById('customer_id').value = '';
+            }
+        }
+        
+        // Update customers when channel changes
+        document.getElementById('channel_id').addEventListener('change', function() {
+            const channelId = this.value;
+            const customerSelect = document.getElementById('customer_id');
+            const currentValue = customerSelect.value;
+            
+            // Clear existing options except the first one
+            customerSelect.innerHTML = '<option value="">Select a customer (optional)</option>';
+            
+            if (channelId) {
+                // Filter customers for this channel
+                const customers = [
+                    {% for customer in customers %}
+                    {id: {{ customer.id }}, channelId: {{ customer.channel_id }}, name: "{{ customer.channel.name }} - {{ customer.name }}"}{% if not loop.last %},{% endif %}
+                    {% endfor %}
+                ];
+                
+                customers.forEach(customer => {
+                    if (customer.channelId == channelId) {
+                        const option = document.createElement('option');
+                        option.value = customer.id;
+                        option.textContent = customer.name;
+                        if (customer.id == currentValue) {
+                            option.selected = true;
+                        }
+                        customerSelect.appendChild(option);
+                    }
+                });
+            }
+        });
+    </script>
+{% endblock %}
+

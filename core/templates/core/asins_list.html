@@ -1,0 +1,518 @@
+{% extends "base.html" %}
+
+{% block page_title_text %}ASINs{% endblock %}
+
+{% block extra_styles %}
+    .header-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .data-table thead {
+        background: #667eea;
+        color: white;
+    }
+    
+    .data-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .data-table td {
+        padding: 15px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .data-table tbody tr:hover {
+        background: #f7fafc;
+    }
+    
+    .data-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .asin-img {
+        max-width: 100px;
+        max-height: 100px;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        border-radius: 4px;
+    }
+    
+    .no-data {
+        text-align: center;
+        padding: 60px 20px;
+        color: #718096;
+    }
+    
+    .btn-small {
+        padding: 6px 12px;
+        font-size: 0.875rem;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: inline-block;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-add {
+        background: #48bb78;
+        color: white;
+    }
+    
+    .btn-add:hover {
+        background: #38a169;
+        transform: translateY(-1px);
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        color: white;
+        text-decoration: none;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: inline-block;
+    }
+    
+    .btn-primary {
+        background: #667eea;
+    }
+    
+    .btn-primary:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+    }
+    
+    .btn-edit {
+        background: #667eea;
+        color: white;
+        padding: 8px 16px;
+        white-space: nowrap;
+    }
+    
+    .btn-edit:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+    }
+    
+    .btn-edit:disabled {
+        background: #cbd5e0;
+        cursor: not-allowed;
+        transform: none;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="header-actions">
+        <h2 style="margin: 0; color: #2d3748;">All ASINs</h2>
+        {% if session.is_admin %}
+        <div style="display: flex; gap: 10px;">
+            <button type="button" id="scrapeAllPangolinBtn" class="btn-small btn-add" style="background: #667eea; padding: 8px 16px; white-space: nowrap;">🔄 Scrape All with Pangolin</button>
+            <button type="button" id="scrapeAllRapidApiBtn" class="btn-small btn-add" style="background: #ed8936; padding: 8px 16px; white-space: nowrap;">⚡ Scrape All with RapidAPI</button>
+            <a href="{{ url_for('core.upload_asin_mapping') }}" class="btn-small btn-add">📥 Upload Mapping</a>
+        </div>
+        {% endif %}
+    </div>
+    
+    {% if asins %}
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>ASIN</th>
+                    <th>Image</th>
+                    <th>Title</th>
+                    <th>Amazon Link</th>
+                    <th>Scraped At</th>
+                    <th>Items Count</th>
+                    {% if session.is_admin %}
+                    <th>Actions</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for asin in asins %}
+                <tr>
+                    <td><strong>{{ asin.asin }}</strong></td>
+                    <td>
+                        {% if asin.img_url %}
+                        <img src="{{ asin.img_url }}" alt="{{ asin.asin }}" class="asin-img" onerror="this.style.display='none'">
+                        {% else %}
+                        <span style="color: #cbd5e0;">No image</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ asin.title or '-' }}</td>
+                    <td>
+                        <a href="https://www.amazon.com/dp/{{ asin.asin }}" target="_blank" rel="noopener noreferrer" style="color: #667eea; text-decoration: none;">
+                            🔗 View on Amazon
+                        </a>
+                    </td>
+                    <td>{{ asin.scraped_at.strftime('%Y-%m-%d') if asin.scraped_at else '-' }}</td>
+                    <td>{{ asin.items|length }}</td>
+                    {% if session.is_admin %}
+                    <td>
+                        <div style="display: flex; gap: 5px; flex-wrap: nowrap;">
+                            <button type="button" class="btn-small btn-edit scrape-btn" data-asin-id="{{ asin.id }}" data-asin="{{ asin.asin }}">🔄 Pangolin API</button>
+                            <button type="button" class="btn-small btn-edit scrape-rapidapi-btn" data-asin-id="{{ asin.id }}" data-asin="{{ asin.asin }}" style="background: #ed8936;">⚡ RapidAPI</button>
+                        </div>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="no-data">
+        <h3>No ASINs found</h3>
+        <p>Upload your first ASIN mapping to get started.</p>
+        {% if session.is_admin %}
+        <a href="{{ url_for('core.upload_asin_mapping') }}" class="btn-small btn-add" style="margin-top: 20px;">📥 Upload Mapping</a>
+        {% endif %}
+    </div>
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Wait for DOM to be fully loaded
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('=== ASIN SCRAPING SCRIPT LOADED ===');
+        console.log('DOM Content Loaded event fired');
+        
+        // Scrape single ASIN
+        const scrapeButtons = document.querySelectorAll('.scrape-btn');
+        console.log('Found', scrapeButtons.length, 'scrape buttons');
+        
+        if (scrapeButtons.length === 0) {
+            console.warn('No scrape buttons found! Check if user is admin.');
+        }
+        
+        scrapeButtons.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const asinId = this.getAttribute('data-asin-id');
+                const asin = this.getAttribute('data-asin');
+                const originalText = this.textContent;
+                
+                if (!asinId) {
+                    console.error('No ASIN ID found');
+                    alert('Error: No ASIN ID found');
+                    return;
+                }
+                
+                console.log('Scraping ASIN:', asin, 'ID:', asinId);
+                
+                this.disabled = true;
+                this.textContent = '⏳ Scraping (may retry if busy)...';
+                
+                console.log('=== SCRAPING ASIN ===');
+                console.log('ASIN ID:', asinId);
+                console.log('ASIN:', asin);
+                console.log('Starting fetch request to:', `/scraping/scrape/${asinId}`);
+                console.log('Timestamp:', new Date().toISOString());
+                
+                fetch(`/scraping/scrape/${asinId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    console.log('Response received. Status:', response.status);
+                    console.log('Response headers:', [...response.headers.entries()]);
+                    
+                    if (!response.ok) {
+                        console.error('Response not OK. Status:', response.status);
+                        return response.text().then(text => {
+                            console.error('Error response body:', text);
+                            try {
+                                const err = JSON.parse(text);
+                                throw new Error(err.message || `HTTP error! status: ${response.status}`);
+                            } catch (e) {
+                                if (e instanceof Error && e.message.includes('HTTP error')) {
+                                    throw e;
+                                }
+                                throw new Error(`HTTP error! status: ${response.status}, body: ${text.substring(0, 200)}`);
+                            }
+                        });
+                    }
+                    
+                    return response.text().then(text => {
+                        console.log('Response body (raw):', text.substring(0, 500));
+                        try {
+                            return JSON.parse(text);
+                        } catch (e) {
+                            console.error('Failed to parse JSON:', e);
+                            console.error('Response text:', text);
+                            throw new Error('Invalid JSON response from server');
+                        }
+                    });
+                })
+                .then(data => {
+                    console.log('Parsed response data:', data);
+                    if (data.success) {
+                        console.log('Scraping successful!');
+                        this.textContent = '✓ Done';
+                        this.style.background = '#48bb78';
+                        // Reload page after 1 second to show updated data
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        console.error('Scraping failed:', data.message);
+                        alert(`Error: ${data.message}`);
+                        this.disabled = false;
+                        this.textContent = originalText;
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch error details:');
+                    console.error('Error name:', error.name);
+                    console.error('Error message:', error.message);
+                    console.error('Error stack:', error.stack);
+                    console.error('Full error object:', error);
+                    
+                    const errorMsg = error.message || 'Unknown error occurred';
+                    alert(`Error scraping ASIN: ${errorMsg}\n\nCheck browser console (F12) for more details.`);
+                    this.disabled = false;
+                    this.textContent = originalText;
+                });
+            });
+        });
+        
+        // Scrape with RapidAPI
+        const scrapeRapidApiButtons = document.querySelectorAll('.scrape-rapidapi-btn');
+        console.log('Found', scrapeRapidApiButtons.length, 'RapidAPI scrape buttons');
+        
+        scrapeRapidApiButtons.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                const asinId = this.getAttribute('data-asin-id');
+                const asin = this.getAttribute('data-asin');
+                const originalText = this.textContent;
+                
+                if (!asinId) {
+                    console.error('No ASIN ID found');
+                    alert('Error: No ASIN ID found');
+                    return;
+                }
+                
+                console.log('Scraping ASIN with RapidAPI:', asin, 'ID:', asinId);
+                
+                this.disabled = true;
+                this.textContent = '⏳ Scraping...';
+                
+                fetch(`/scraping/scrape-rapidapi/${asinId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    console.log('Response received. Status:', response.status);
+                    
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            console.error('Error response body:', text);
+                            try {
+                                const err = JSON.parse(text);
+                                throw new Error(err.message || `HTTP error! status: ${response.status}`);
+                            } catch (e) {
+                                if (e instanceof Error && e.message.includes('HTTP error')) {
+                                    throw e;
+                                }
+                                throw new Error(`HTTP error! status: ${response.status}, body: ${text.substring(0, 200)}`);
+                            }
+                        });
+                    }
+                    
+                    return response.text().then(text => {
+                        console.log('Response body (raw):', text.substring(0, 500));
+                        try {
+                            return JSON.parse(text);
+                        } catch (e) {
+                            console.error('Failed to parse JSON:', e);
+                            throw new Error('Invalid JSON response from server');
+                        }
+                    });
+                })
+                .then(data => {
+                    console.log('Parsed response data:', data);
+                    if (data.success) {
+                        console.log('RapidAPI scraping successful!');
+                        this.textContent = '✓ Done';
+                        this.style.background = '#48bb78';
+                        // Reload page after 1 second to show updated data
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1000);
+                    } else {
+                        console.error('RapidAPI scraping failed:', data.message);
+                        alert(`Error: ${data.message}`);
+                        this.disabled = false;
+                        this.textContent = originalText;
+                    }
+                })
+                .catch(error => {
+                    console.error('Fetch error:', error);
+                    const errorMsg = error.message || 'Unknown error occurred';
+                    alert(`Error scraping ASIN with RapidAPI: ${errorMsg}\n\nCheck browser console (F12) for more details.`);
+                    this.disabled = false;
+                    this.textContent = originalText;
+                });
+            });
+        });
+        
+        // Scrape all unscraped ASINs with Pangolin
+        const scrapeAllPangolinBtn = document.getElementById('scrapeAllPangolinBtn');
+        if (scrapeAllPangolinBtn) {
+            scrapeAllPangolinBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                if (!confirm('This will scrape all unscraped ASINs with Pangolin API. This may take a while. Continue?')) {
+                    return;
+                }
+                
+                const originalText = this.textContent;
+                this.disabled = true;
+                this.textContent = '⏳ Scraping...';
+                
+                fetch('/scraping/scrape/all', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw new Error(err.message || `HTTP error! status: ${response.status}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        alert(`${data.message}\n\nProcessed: ${data.processed}\nSuccessful: ${data.success_count}\nFailed: ${data.fail_count}`);
+                        // Reload page to show updated data
+                        window.location.reload();
+                    } else {
+                        alert(`Error: ${data.message}`);
+                        this.disabled = false;
+                        this.textContent = originalText;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(`Error scraping ASINs: ${error.message}`);
+                    this.disabled = false;
+                    this.textContent = originalText;
+                });
+            });
+        }
+        
+        // Scrape all unscraped ASINs with RapidAPI
+        const scrapeAllRapidApiBtn = document.getElementById('scrapeAllRapidApiBtn');
+        console.log('RapidAPI scrape all button:', scrapeAllRapidApiBtn);
+        if (scrapeAllRapidApiBtn) {
+            scrapeAllRapidApiBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                console.log('RapidAPI scrape all button clicked');
+                
+                if (!confirm('This will scrape all unscraped ASINs with RapidAPI. This may take a while. Continue?')) {
+                    return;
+                }
+                
+                const originalText = this.textContent;
+                this.disabled = true;
+                this.textContent = '⏳ Scraping...';
+                
+                console.log('Making fetch request to /scraping/scrape-rapidapi/all');
+                
+                fetch('/scraping/scrape-rapidapi/all', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'same-origin'
+                })
+                .then(response => {
+                    console.log('Response received. Status:', response.status);
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            console.error('Error response body:', text);
+                            try {
+                                const err = JSON.parse(text);
+                                throw new Error(err.message || `HTTP error! status: ${response.status}`);
+                            } catch (e) {
+                                if (e instanceof Error && e.message.includes('HTTP error')) {
+                                    throw e;
+                                }
+                                throw new Error(`HTTP error! status: ${response.status}, body: ${text.substring(0, 200)}`);
+                            }
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Parsed response data:', data);
+                    if (data.success) {
+                        alert(`${data.message}\n\nProcessed: ${data.processed}\nSuccessful: ${data.success_count}\nFailed: ${data.fail_count}`);
+                        // Reload page to show updated data
+                        window.location.reload();
+                    } else {
+                        alert(`Error: ${data.message}`);
+                        this.disabled = false;
+                        this.textContent = originalText;
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert(`Error scraping ASINs with RapidAPI: ${error.message}`);
+                    this.disabled = false;
+                    this.textContent = originalText;
+                });
+            });
+        } else {
+            console.warn('RapidAPI scrape all button not found!');
+        }
+    });
+</script>
+{% endblock %}
+

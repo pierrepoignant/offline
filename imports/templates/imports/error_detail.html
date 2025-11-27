@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+
+
+
+{% block page_title_text %}📋 Import Error Details{% endblock %}
+
+{% block extra_styles %}
+    .error-detail {
+        background: white;
+        padding: 25px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+    }
+    
+    .error-field {
+        margin-bottom: 20px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .error-field:last-child {
+        border-bottom: none;
+    }
+    
+    .error-field label {
+        display: block;
+        font-weight: 600;
+        color: #4a5568;
+        margin-bottom: 8px;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .error-field .value {
+        padding: 12px;
+        background: #f7fafc;
+        border-radius: 6px;
+        font-family: 'Courier New', monospace;
+        font-size: 0.875rem;
+        word-break: break-all;
+    }
+    
+    .error-field .value pre {
+        margin: 0;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+    
+    .badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .badge-snowflake {
+        background: #4299e1;
+        color: white;
+    }
+    
+    .badge-csv {
+        background: #48bb78;
+        color: white;
+    }
+    
+    .actions {
+        margin-top: 20px;
+        display: flex;
+        gap: 10px;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        color: white;
+        text-decoration: none;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        display: inline-block;
+    }
+    
+    .btn-primary {
+        background: #667eea;
+    }
+    
+    .btn-primary:hover {
+        background: #5568d3;
+    }
+    
+    .btn-danger {
+        background: #e53e3e;
+    }
+    
+    .btn-danger:hover {
+        background: #c53030;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="error-detail">
+        <div class="error-field">
+            <label>ID</label>
+            <div class="value">{{ import_error.id }}</div>
+        </div>
+        
+        <div class="error-field">
+            <label>Import Channel</label>
+            <div class="value">
+                <span class="badge badge-{{ import_error.import_channel }}">{{ import_error.import_channel }}</span>
+            </div>
+        </div>
+        
+        <div class="error-field">
+            <label>Import Date</label>
+            <div class="value">{{ import_error.import_date.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+        </div>
+        
+        {% if import_error.row_number %}
+        <div class="error-field">
+            <label>Row Number</label>
+            <div class="value">{{ import_error.row_number }}</div>
+        </div>
+        {% endif %}
+        
+        {% if import_error.error_message %}
+        <div class="error-field">
+            <label>Error Message</label>
+            <div class="value">{{ import_error.error_message }}</div>
+        </div>
+        {% endif %}
+        
+        <div class="error-field">
+            <label>Error Data (JSON)</label>
+            <div class="value">
+                <pre>{% if error_data is string %}{{ error_data }}{% else %}{{ error_data | tojson(indent=2) }}{% endif %}</pre>
+            </div>
+        </div>
+        
+        <div class="error-field">
+            <label>Created At</label>
+            <div class="value">{{ import_error.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+        </div>
+    </div>
+    
+    <div class="actions">
+        <a href="{{ url_for('imports.import_errors_list') }}" class="btn btn-primary">← Back to List</a>
+        <form method="POST" action="{{ url_for('imports.delete_import_error', error_id=import_error.id) }}" style="display: inline;">
+            <button type="submit" class="btn btn-danger" onclick="return confirm('Are you sure you want to delete this import error?');">🗑️ Delete</button>
+        </form>
+    </div>
+{% endblock %}
+

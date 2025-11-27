@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+
+
+{% block page_title_text %}{% if channel %}Edit SPINS Channel{% else %}Add SPINS Channel{% endif %}{% endblock %}
+
+{% block extra_styles %}
+    .form-container {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        max-width: 600px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #4a5568;
+    }
+    
+    .form-group input[type="text"] {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+    
+    .form-group input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 30px;
+    }
+    
+    .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-primary {
+        background: #667eea;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background: #e2e8f0;
+        color: #4a5568;
+    }
+    
+    .btn-secondary:hover {
+        background: #cbd5e0;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="form-container">
+        <form method="POST">
+            <div class="form-group">
+                <label for="name">Channel Name *</label>
+                <input type="text" id="name" name="name" value="{{ channel.name if channel else '' }}" required autofocus>
+            </div>
+            
+            <div class="form-group">
+                <label for="short_name">Short Name</label>
+                <input type="text" id="short_name" name="short_name" value="{{ channel.short_name if channel and channel.short_name else '' }}" placeholder="Optional short name (max 100 chars)">
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">{% if channel %}Update Channel{% else %}Create Channel{% endif %}</button>
+                <a href="{{ url_for('spins.channels_list') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+

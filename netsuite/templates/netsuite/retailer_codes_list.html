@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+
+
+{% block page_title_text %}🏷️ Retailer Codes{% endblock %}
+
+{% block extra_styles %}
+    .header-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .data-table thead {
+        background: #667eea;
+        color: white;
+    }
+    
+    .data-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .data-table td {
+        padding: 15px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .data-table tbody tr:hover {
+        background: #f7fafc;
+    }
+    
+    .data-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .btn-small {
+        padding: 6px 12px;
+        font-size: 0.875rem;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: inline-block;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-edit {
+        background: #667eea;
+        color: white;
+    }
+    
+    .btn-edit:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+    }
+    
+    .btn-delete {
+        background: #e53e3e;
+        color: white;
+    }
+    
+    .btn-delete:hover {
+        background: #c53030;
+        transform: translateY(-1px);
+    }
+    
+    .btn-add {
+        background: #48bb78;
+        color: white;
+    }
+    
+    .btn-add:hover {
+        background: #38a169;
+        transform: translateY(-1px);
+    }
+    
+    .no-data {
+        text-align: center;
+        padding: 60px 20px;
+        color: #718096;
+    }
+    
+    .info-box {
+        background: #e6fffa;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        border-left: 4px solid #38b2ac;
+    }
+    
+    .info-box p {
+        margin: 0;
+        color: #234e52;
+        font-size: 0.875rem;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="info-box">
+        <p><strong>ℹ️ Info:</strong> Retailer codes are used to map retailer codes from Netsuite imports to channels. When you save a mapping, all existing Netsuite records with that retailer code will be updated to use the correct channel.</p>
+    </div>
+    
+    <div class="header-actions">
+        <h2 style="margin: 0; color: #2d3748;">All Retailer Codes</h2>
+        {% if session.is_admin %}
+        <a href="{{ url_for('netsuite.create_retailer_code') }}" class="btn-small btn-add">➕ Add Retailer Code</a>
+        {% endif %}
+    </div>
+    
+    {% if retailer_codes %}
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Retailer Code</th>
+                    <th>Channel</th>
+                    {% if session.is_admin %}
+                    <th>Actions</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for retailer_code in retailer_codes %}
+                <tr>
+                    <td><strong>{{ retailer_code.retailer_code }}</strong></td>
+                    <td>{{ retailer_code.channel.name }}</td>
+                    {% if session.is_admin %}
+                    <td>
+                        <a href="{{ url_for('netsuite.edit_retailer_code', retailer_code_id=retailer_code.id) }}" class="btn-small btn-edit">Edit</a>
+                        <form method="POST" action="{{ url_for('netsuite.delete_retailer_code', retailer_code_id=retailer_code.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete retailer code {{ retailer_code.retailer_code }}?');">
+                            <button type="submit" class="btn-small btn-delete">Delete</button>
+                        </form>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="no-data">
+        <h3>No retailer codes found</h3>
+        <p>Create your first retailer code mapping to get started.</p>
+        {% if session.is_admin %}
+        <a href="{{ url_for('netsuite.create_retailer_code') }}" class="btn-small btn-add" style="margin-top: 20px;">➕ Add Retailer Code</a>
+        {% endif %}
+    </div>
+    {% endif %}
+{% endblock %}
+

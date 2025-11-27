@@ -1,0 +1,664 @@
+{
+    "status": "OK",
+    "request_id": "cc78fc75-fa62-42ff-8679-b1fdff2e3cb1",
+    "parameters": {
+      "asin": "B078K36RQ1",
+      "country": "US",
+      "language": "en_US"
+    },
+    "data": {
+      "asin": "B078K36RQ1",
+      "product_title": "Viking Revolution Sandalwood Beard Oil for Men - Natural Mens Beard Oil with Argan Oil and Jojoba Oil - Beard Softener, Strengthens and Moisturizes - Beard Conditioner for Men (Sandalwood, 1 Pack)",
+      "product_price": "7.90",
+      "product_original_price": "$9.88",
+      "unit_price": "$7.90",
+      "unit_count": 1,
+      "minimum_order_quantity": null,
+      "currency": "USD",
+      "country": "US",
+      "product_byline": "Visit the Viking Revolution Store",
+      "product_byline_link": "https://www.amazon.com/stores/VikingRevolution/page/9550595B-56CF-497D-B7A3-89CE0366E356?lp_asin=B078K36RQ1&ref_=ast_bln&store_ref=bl_ast_dp_brandLogo_sto",
+      "product_byline_links": [
+        "https://www.amazon.com/stores/VikingRevolution/page/9550595B-56CF-497D-B7A3-89CE0366E356?lp_asin=B078K36RQ1&ref_=ast_bln&store_ref=bl_ast_dp_brandLogo_sto"
+      ],
+      "product_star_rating": "4.5",
+      "product_num_ratings": 38155,
+      "product_url": "https://www.amazon.com/dp/B078K36RQ1",
+      "product_slug": "Viking-Revolution-Sandelholzduft-Nat%C3%BCrlicher-Jojoba%C3%B6len",
+      "product_photo": "https://m.media-amazon.com/images/I/71VQ-L7xwJL._SL1500_.jpg",
+      "product_num_offers": 1,
+      "product_availability": "In Stock",
+      "product_condition": "One-time purchase:",
+      "is_best_seller": false,
+      "is_amazon_choice": true,
+      "is_prime": true,
+      "climate_pledge_friendly": false,
+      "sales_volume": "6K+ bought in past month",
+      "about_product": [
+        "Be a Stunner - Great Sandalwood scent will leave you to revel in the fragrance of your beard for hours",
+        "Goodbye, Beardruff! - Soothe your itchy and irritated skin with a just a few drops a day",
+        "100% Natural - A perfect blend of Argan & Jojoba strengthens facial hair & helps avoid thin patches",
+        "Tame Stubborn Facial Hair - Have a manageable,frizz-free beard that is soft & smooth to the touch",
+        "The Viking Promise: If for any reason, you're not completely satisfied, simply contact us and we'll take care of it."
+      ],
+      "product_description": null,
+      "product_information": {
+        "Is Discontinued By Manufacturer": "No",
+        "Language": "English",
+        "Product Dimensions": "4.72 x 2.36 x 0.5 inches; 3.2 ounces",
+        "UPC": "712038980130",
+        "Manufacturer": "Viking Revolution",
+        "ASIN": "B078K36RQ1",
+        "Best Sellers Rank": "#653 in Beauty & Personal Care (See Top 100 in Beauty & Personal Care)    #1 in Beard Conditioners & Oils",
+        "Customer Reviews": "4.5             4.5 out of 5 stars          \n\n                          38,155 ratings"
+      },
+      "rating_distribution": {
+        "1": 3,
+        "2": 3,
+        "3": 8,
+        "4": 15,
+        "5": 71
+      },
+      "product_photos": [
+        "https://m.media-amazon.com/images/I/71VQ-L7xwJL._SL1500_.jpg",
+        "https://m.media-amazon.com/images/I/71dm0FL8+GL._SL1500_.jpg",
+        "https://m.media-amazon.com/images/I/71y-4u+5QqL._SL1500_.jpg",
+        "https://m.media-amazon.com/images/I/71GnIvgj7tL._SL1500_.jpg",
+        "https://m.media-amazon.com/images/I/61t23A8Rd8L._SL1500_.jpg",
+        "https://m.media-amazon.com/images/I/71odCmDBdrL._SL1500_.jpg"
+      ],
+      "product_videos": [
+        {
+          "id": "amzn1.vse.video.6efce53f0961405fa59348db2d9f7a7d",
+          "title": "Beard oil Video",
+          "video_url": "https://m.media-amazon.com/images/S/vse-vms-transcoding-artifact-us-east-1-prod/7b5b7eb8-8df0-4f94-94bb-68b9aa8f7a53/default.jobtemplate.hls.m3u8",
+          "video_height": "1080",
+          "video_width": "1920",
+          "thumbnail_url": "https://m.media-amazon.com/images/I/91ExIXA8I3L.SS40_BG85,85,85_BR-120_PKdp-play-icon-overlay__.png",
+          "product_asin": "B078K36RQ1",
+          "parent_asin": "B0CWWZS5HQ"
+        },
+        {
+          "id": "amzn1.vse.video.bafbb8f3c13f4f08829be2af317f1235",
+          "title": "How to Apply Beard Oil",
+          "video_url": "https://m.media-amazon.com/images/S/vse-vms-transcoding-artifact-us-east-1-prod/v2/90e1e834-c9ca-5007-848b-69be4d8a14b7/ShortForm-Generic-480p-16-9-1409173089793-rpcbe5.mp4",
+          "video_height": "480",
+          "video_width": "854",
+          "thumbnail_url": "https://m.media-amazon.com/images/I/B1iKr9I58IS.SS40_BG85,85,85_BR-120_PKdp-play-icon-overlay__.png",
+          "product_asin": "B078K36RQ1",
+          "parent_asin": "B0CWWZS5HQ"
+        },
+        {
+          "id": "amzn1.vse.video.06605f757ebf46658fca51cf3334cc2a",
+          "title": "Tame the Mane: Viking Revolution Sandalwood Beard Oil Review",
+          "video_url": "https://m.media-amazon.com/images/S/vse-vms-transcoding-artifact-us-east-1-prod/7edfa81a-10da-41fe-961d-ebd7c06d0de2/default.vertical.jobtemplate.hls.m3u8",
+          "video_height": "1920",
+          "video_width": "1080",
+          "thumbnail_url": "https://m.media-amazon.com/images/I/61qroO6KFXL.SS40_BG85,85,85_BR-120_PKdp-play-icon-overlay__.jpg",
+          "product_asin": "B078K36RQ1",
+          "parent_asin": "B0CWWZS5HQ"
+        },
+        {
+          "id": "amzn1.vse.video.0dcfd18c6fc44ce39abe95afae33a0fa",
+          "title": "Daily Beard Products - Oil is From Viking, Not Duke Cannon",
+          "video_url": "https://m.media-amazon.com/images/S/vse-vms-transcoding-artifact-us-east-1-prod/213a46ce-ec3a-464f-b2aa-f60427b2b762/default.vertical.jobtemplate.hls.m3u8",
+          "video_height": "1920",
+          "video_width": "1080",
+          "thumbnail_url": "https://m.media-amazon.com/images/I/A136+xOMrYL.SS40_BG85,85,85_BR-120_PKdp-play-icon-overlay__.png",
+          "product_asin": "B078K36RQ1",
+          "parent_asin": "B0CWWZS5HQ"
+        },
+        {
+          "id": "amzn1.vse.video.02a3da2ab9ce47e7b818e9850c384000",
+          "title": "Beard Oils by Viking Revolution",
+          "video_url": "https://m.media-amazon.com/images/S/vse-vms-transcoding-artifact-us-east-1-prod/75b4e163-f112-4856-86ce-89a98ab7add6/default.jobtemplate.hls.m3u8",
+          "video_height": "1080",
+          "video_width": "1920",
+          "thumbnail_url": "https://m.media-amazon.com/images/I/B1vqAQS8JJL.SS40_BG85,85,85_BR-120_PKdp-play-icon-overlay__.jpg",
+          "product_asin": "B078K36RQ1",
+          "parent_asin": "B0CWWZS5HQ"
+        },
+        {
+          "id": "amzn1.vse.video.023babcd338747728113578c0cd09a9d",
+          "title": "Here's How I Use Beard Oil",
+          "video_url": "https://m.media-amazon.com/images/S/vse-vms-transcoding-artifact-us-east-1-prod/617eeb76-3c96-4431-85a2-4b21b8db33be/default.jobtemplate.hls.m3u8",
+          "video_height": "1080",
+          "video_width": "1920",
+          "thumbnail_url": "https://m.media-amazon.com/images/I/61OMVmCqDpL.SS40_BG85,85,85_BR-120_PKdp-play-icon-overlay__.jpg",
+          "product_asin": "B078K36RQ1",
+          "parent_asin": "B0CWWZS5HQ"
+        },
+        {
+          "id": "amzn1.vse.video.08106d0af9af45259c0168637b788cf6",
+          "title": "Ranking and Comparing 13 Beard Oils. Which Ones Are Best?",
+          "video_url": "https://m.media-amazon.com/images/S/vse-vms-transcoding-artifact-us-east-1-prod/0815c6e7-e6cf-4a86-88cc-6d4077cc31ff/default.jobtemplate.hls.m3u8",
+          "video_height": "1080",
+          "video_width": "1920",
+          "thumbnail_url": "https://m.media-amazon.com/images/I/612mR3zJtvL.SS40_BG85,85,85_BR-120_PKdp-play-icon-overlay__.jpg",
+          "product_asin": "B078K36RQ1",
+          "parent_asin": "B0CWWZS5HQ"
+        }
+      ],
+      "user_uploaded_videos": [],
+      "video_thumbnail": "https://m.media-amazon.com/images/I/91ExIXA8I3L.SX522_.png",
+      "has_video": true,
+      "product_details": {
+        "Product Benefits": "Moisturizes beard and skin while taming unruly hair for a soft and smooth result",
+        "Hair Type": "various",
+        "Material Type Free": "Paraben Free, Preservative Free, Silicone Free, Synthetic Color Free",
+        "Scent": "Sandalwood",
+        "Liquid Volume": "30 Milliliters"
+      },
+      "customers_say": "Customers find this beard oil effective and appreciate that it's unscented. The product receives positive feedback for its moisturizing properties, making beards soft, shiny, and less prone to dandruff, while also making them more manageable. They like its natural ingredients and consider it good value for money.",
+      "top_reviews": [
+        {
+          "review_id": "R101IO4AF69ZQS",
+          "review_title": "Smooth Beard, Great Scent – A Must-Have for Daily Beard Care",
+          "review_comment": "The Viking Revolution Sandalwood Beard Oil has become a key part of keeping my beard well groomed. A few drops leave my beard feeling soft, well-moisturized, and itch-free throughout the day. It absorbs quickly without feeling greasy, which is a huge plus. The sandalwood scent is a clean smell, but not overpowering—perfect for daily use. I’ve noticed less dryness in my skin underneath and an overall healthier look and feel to my beard, Less dandruff flakes as well. If you're looking for a high-quality, affordable beard oil that does exactly what it promises and smells great too, this is a great choice. Will definitely be ordering again!",
+          "review_star_rating": "5",
+          "review_link": "https://www.amazon.com/gp/customer-reviews/R101IO4AF69ZQS",
+          "review_author_id": "AFGECZEKCFUOUAZUBBJJLK2FQVGA",
+          "review_author": "Duke of Westfall St",
+          "review_author_url": "https://www.amazon.com/gp/profile/amzn1.account.AFGECZEKCFUOUAZUBBJJLK2FQVGA/ref=cm_cr_dp_d_gw_tr?ie=UTF8",
+          "review_author_avatar": "https://m.media-amazon.com/images/S/amazon-avatars-global/default.png",
+          "review_images": [],
+          "review_video": null,
+          "review_date": "Reviewed in the United States on June 18, 2025",
+          "is_verified_purchase": true,
+          "helpful_vote_statement": "13 people found this helpful",
+          "reviewed_product_asin": "B078K36RQ1",
+          "reviewed_product_variant": {
+            "Scent": "Sandalwood",
+            "Size": "1 Fl Oz (Pack of 1)"
+          },
+          "is_vine": false
+        },
+        {
+          "review_id": "R15PYPNB11KP0F",
+          "review_title": "Great product",
+          "review_comment": "The best beard oil I’ve used. Not a noticable smell but makes my goatee very soft and my skin moisturized.",
+          "review_star_rating": "5",
+          "review_link": "https://www.amazon.com/gp/customer-reviews/R15PYPNB11KP0F",
+          "review_author_id": "AFWBXOAOHR4DH7PEGMAIOYOSA4PA",
+          "review_author": "Amazon Customer",
+          "review_author_url": "https://www.amazon.com/gp/profile/amzn1.account.AFWBXOAOHR4DH7PEGMAIOYOSA4PA/ref=cm_cr_dp_d_gw_tr?ie=UTF8",
+          "review_author_avatar": "https://m.media-amazon.com/images/S/amazon-avatars-global/default.png",
+          "review_images": [],
+          "review_video": null,
+          "review_date": "Reviewed in the United States on October 22, 2025",
+          "is_verified_purchase": true,
+          "helpful_vote_statement": "One person found this helpful",
+          "reviewed_product_asin": "B078K36RQ1",
+          "reviewed_product_variant": {
+            "Scent": "Sandalwood",
+            "Size": "1 Fl Oz (Pack of 1)"
+          },
+          "is_vine": false
+        },
+        {
+          "review_id": "R756DNQ1CEOQ4",
+          "review_title": "Good product to help with beard maintenance",
+          "review_comment": "Good product. Great smell. Easy to apply. And does not cost an arm and a leg. It can be a bit sticky after application. It is not too oily, supplies the shine and quality needed to a healthy beard. It has helped my beard go from hard to softer. I have purchased this product 3 times so far. Good overall.",
+          "review_star_rating": "4",
+          "review_link": "https://www.amazon.com/gp/customer-reviews/R756DNQ1CEOQ4",
+          "review_author_id": "AHV337JURZY6TKOIP46MZPUKCANA",
+          "review_author": "Tim",
+          "review_author_url": "https://www.amazon.com/gp/profile/amzn1.account.AHV337JURZY6TKOIP46MZPUKCANA/ref=cm_cr_dp_d_gw_tr?ie=UTF8",
+          "review_author_avatar": "https://m.media-amazon.com/images/S/amazon-avatars-global/default.png",
+          "review_images": [],
+          "review_video": null,
+          "review_date": "Reviewed in the United States on September 4, 2025",
+          "is_verified_purchase": true,
+          "helpful_vote_statement": "5 people found this helpful",
+          "reviewed_product_asin": "B078K36RQ1",
+          "reviewed_product_variant": {
+            "Scent": "Sandalwood",
+            "Size": "1 Fl Oz (Pack of 1)"
+          },
+          "is_vine": false
+        },
+        {
+          "review_id": "R2SNQTKDXCMY3X",
+          "review_title": "Great product for dry beards. Scent is not overpowering either.",
+          "review_comment": "Great product! My beard gets very dry around my chin specifically, and this has helped a ton. I wanted something that smells good and blends with other scents well and this is perfect. Not overpowering, and keeps its hold throughout the day. Great Value. Also not super oily and drys nicely. Highly recommend.",
+          "review_star_rating": "5",
+          "review_link": "https://www.amazon.com/gp/customer-reviews/R2SNQTKDXCMY3X",
+          "review_author_id": "AEDMLRU7PD23ERI7EWIIZJXE5IFQ",
+          "review_author": "William",
+          "review_author_url": "https://www.amazon.com/gp/profile/amzn1.account.AEDMLRU7PD23ERI7EWIIZJXE5IFQ/ref=cm_cr_dp_d_gw_tr?ie=UTF8",
+          "review_author_avatar": "https://m.media-amazon.com/images/S/amazon-avatars-global/default.png",
+          "review_images": [],
+          "review_video": null,
+          "review_date": "Reviewed in the United States on November 21, 2025",
+          "is_verified_purchase": true,
+          "reviewed_product_asin": "B078K36RQ1",
+          "reviewed_product_variant": {
+            "Scent": "Spiced Vanilla",
+            "Size": "1 Fl Oz (Pack of 1)"
+          },
+          "is_vine": false
+        },
+        {
+          "review_id": "R25I4M4O62OCHO",
+          "review_title": "Great beard product",
+          "review_comment": "Works great, doesnt make your beard sticky. Makes beard hair feel soft and smell is great. It isnt real strong smell but last all day.",
+          "review_star_rating": "5",
+          "review_link": "https://www.amazon.com/gp/customer-reviews/R25I4M4O62OCHO",
+          "review_author_id": "AEZRZWPBKXVX7VAII4YZ5T5RMNJQ",
+          "review_author": "Robbin bordelon",
+          "review_author_url": "https://www.amazon.com/gp/profile/amzn1.account.AEZRZWPBKXVX7VAII4YZ5T5RMNJQ/ref=cm_cr_dp_d_gw_tr?ie=UTF8",
+          "review_author_avatar": "https://m.media-amazon.com/images/S/amazon-avatars-global/default.png",
+          "review_images": [],
+          "review_video": null,
+          "review_date": "Reviewed in the United States on October 10, 2025",
+          "is_verified_purchase": true,
+          "helpful_vote_statement": "One person found this helpful",
+          "reviewed_product_asin": "B078K36RQ1",
+          "reviewed_product_variant": {
+            "Scent": "Sweet Tobacco",
+            "Size": "1 Fl Oz (Pack of 1)"
+          },
+          "is_vine": false
+        },
+        {
+          "review_id": "R3DIEO3L952531",
+          "review_title": "Watered Down!",
+          "review_comment": "I was excited to try this product. 3 observations: 1) the Spice Vanilla smells nice in the bottle..2) that scent does not translate to the beard at all…even 3 droppers full cant smell it at all. 3) the oil is more “watery” then even a Walmart oil. Being so thin, it doesnt last long on the beard. EDIT: so the company reached out and offered a refund. You have to appreciate a company that does that…I am gonna let the 2nd bottle “age” a bit to see if it helps. And because of them being proactive, I’ll order at least one more time.",
+          "review_star_rating": "3",
+          "review_link": "https://www.amazon.com/gp/customer-reviews/R3DIEO3L952531",
+          "review_author_id": "AHMT6WVXBLEUGXR5Q3NA5245EGOQ",
+          "review_author": "Brian",
+          "review_author_url": "https://www.amazon.com/gp/profile/amzn1.account.AHMT6WVXBLEUGXR5Q3NA5245EGOQ/ref=cm_cr_dp_d_gw_tr?ie=UTF8",
+          "review_author_avatar": "https://m.media-amazon.com/images/S/amazon-avatars-global/default.png",
+          "review_images": [],
+          "review_video": null,
+          "review_date": "Reviewed in the United States on September 15, 2025",
+          "is_verified_purchase": true,
+          "helpful_vote_statement": "6 people found this helpful",
+          "reviewed_product_asin": "B078K36RQ1",
+          "reviewed_product_variant": {
+            "Scent": "Spiced Vanilla",
+            "Size": "1 Fl Oz (Pack of 2)"
+          },
+          "is_vine": false
+        },
+        {
+          "review_id": "R13SNOIY01RD21",
+          "review_title": "Great beard oil",
+          "review_comment": "Absolutely love this beard oil! And the coffee and whiskey scent smells amazing. It’s got a perfect consistency of oiliness and keeps my beard feeling soft and fresh all day. Definitely recommend.",
+          "review_star_rating": "5",
+          "review_link": "https://www.amazon.com/gp/customer-reviews/R13SNOIY01RD21",
+          "review_author_id": "AEAYALVKPQN3UYBNPRQKUMAZMQZA",
+          "review_author": "Rick Sitton",
+          "review_author_url": "https://www.amazon.com/gp/profile/amzn1.account.AEAYALVKPQN3UYBNPRQKUMAZMQZA/ref=cm_cr_dp_d_gw_tr?ie=UTF8",
+          "review_author_avatar": "https://m.media-amazon.com/images/S/amazon-avatars-global/default.png",
+          "review_images": [],
+          "review_video": null,
+          "review_date": "Reviewed in the United States on November 22, 2025",
+          "is_verified_purchase": true,
+          "reviewed_product_asin": "B078K36RQ1",
+          "reviewed_product_variant": {
+            "Scent": "Coffee Whiskey",
+            "Size": "1 Fl Oz (Pack of 1)"
+          },
+          "is_vine": false
+        },
+        {
+          "review_id": "RL9VCDABFSVNN",
+          "review_title": "My go to beard oil",
+          "review_comment": "Works amazing. I like the scent and it helps control the craziness of my beard. There is a huge difference to when I dont use it. Allows me to comb it better and have shape and lets me have a healthy beard.",
+          "review_star_rating": "5",
+          "review_link": "https://www.amazon.com/gp/customer-reviews/RL9VCDABFSVNN",
+          "review_author_id": "AE3KN3KVOP5UWE4V3GZLA5FTN45A",
+          "review_author": "Remberto Salinas",
+          "review_author_url": "https://www.amazon.com/gp/profile/amzn1.account.AE3KN3KVOP5UWE4V3GZLA5FTN45A/ref=cm_cr_dp_d_gw_tr?ie=UTF8",
+          "review_author_avatar": "https://m.media-amazon.com/images/S/amazon-avatars-global/default.png",
+          "review_images": [],
+          "review_video": null,
+          "review_date": "Reviewed in the United States on November 8, 2025",
+          "is_verified_purchase": true,
+          "helpful_vote_statement": "One person found this helpful",
+          "reviewed_product_asin": "B078K36RQ1",
+          "reviewed_product_variant": {
+            "Scent": "Sandalwood",
+            "Size": "1 Fl Oz (Pack of 3)"
+          },
+          "is_vine": false
+        }
+      ],
+      "top_reviews_global": [
+        {
+          "review_id": "R1285K1BVM8RD",
+          "review_title": "It's good.",
+          "review_comment": "But oil will get everywhere hah",
+          "review_star_rating": "5",
+          "review_link": "https://www.amazon.com/gp/customer-reviews/R1285K1BVM8RD",
+          "review_author_id": null,
+          "review_author": "Nawaf",
+          "review_author_url": null,
+          "review_author_avatar": "https://m.media-amazon.com/images/S/amazon-avatars-global/default.png",
+          "review_images": [],
+          "review_video": null,
+          "review_date": "Reviewed in Saudi Arabia on November 10, 2025",
+          "is_verified_purchase": true,
+          "reviewed_product_asin": "B078K36RQ1",
+          "reviewed_product_variant": {
+            "Scent": "Unscented",
+            "Size": "1 Fl Oz (Pack of 1)"
+          },
+          "is_vine": false
+        },
+        {
+          "review_id": "R19RZ8B8MQBIFM",
+          "review_title": "Worth it especially for the price",
+          "review_comment": "I've been using this for a few months now and it has made my beard feel softer. It has reduced my beard dandruff and made it smell really good. Definitely good value for money",
+          "review_star_rating": "5",
+          "review_link": "https://www.amazon.com/gp/customer-reviews/R19RZ8B8MQBIFM",
+          "review_author_id": null,
+          "review_author": "josh White",
+          "review_author_url": null,
+          "review_author_avatar": "https://m.media-amazon.com/images/S/amazon-avatars-global/default.png",
+          "review_images": [],
+          "review_video": null,
+          "review_date": "Reviewed in the United Kingdom on November 7, 2025",
+          "is_verified_purchase": true,
+          "reviewed_product_asin": "B078K36RQ1",
+          "reviewed_product_variant": {
+            "Scent": "Bay Rum",
+            "Size": "1 Fl Oz (Pack of 1)"
+          },
+          "is_vine": false
+        },
+        {
+          "review_id": "R1KGIS1Y28SOZ4",
+          "review_title": "Bien lisser la barbe !",
+          "review_comment": "Lisse bien la barbe avec un petit effet léger brillant. Agréable odeur. Identique à la description.",
+          "review_star_rating": "4",
+          "review_link": "https://www.amazon.com/gp/customer-reviews/R1KGIS1Y28SOZ4",
+          "review_author_id": null,
+          "review_author": "gerombous",
+          "review_author_url": null,
+          "review_author_avatar": "https://m.media-amazon.com/images/S/amazon-avatars-global/default.png",
+          "review_images": [],
+          "review_video": null,
+          "review_date": "Reviewed in Belgium on June 6, 2025",
+          "is_verified_purchase": true,
+          "reviewed_product_asin": "B078K36RQ1",
+          "reviewed_product_variant": {
+            "Scent": "Spiced Vanilla",
+            "Size": "1 Fl Oz (Pack of 1)"
+          },
+          "is_vine": false
+        },
+        {
+          "review_id": "R1TSYWV1PEEW62",
+          "review_title": "Brillance et douceur",
+          "review_comment": "Sens très bon et bien noté sur Yuka 😉",
+          "review_star_rating": "5",
+          "review_link": "https://www.amazon.com/gp/customer-reviews/R1TSYWV1PEEW62",
+          "review_author_id": null,
+          "review_author": "cédric lotiron",
+          "review_author_url": null,
+          "review_author_avatar": "https://m.media-amazon.com/images/S/amazon-avatars-global/default.png",
+          "review_images": [],
+          "review_video": null,
+          "review_date": "Reviewed in France on October 29, 2025",
+          "is_verified_purchase": true,
+          "reviewed_product_asin": "B078K36RQ1",
+          "reviewed_product_variant": {
+            "Scent": "Spiced Vanilla",
+            "Size": "1 Fl Oz (Pack of 1)"
+          },
+          "is_vine": false
+        },
+        {
+          "review_id": "R1WXBUU3YPXBSA",
+          "review_title": "Gör det den ska enligt beskrivning. Lika bra som ekologiska babyolja…",
+          "review_comment": "Jag får samma resultat av ”Ekologisk babyolja” där innehållsförteckningen för denna skäggolja och babyoljan är näst intill identisk. Babyoljan köper jag i lokal butik till halva priset av skäggoljan samt att babyoljan säljs i 150 ml pumpflaska medans skäggoljan säljs i 30 ml med gammalmodig pipet (för någon slags retrokännsla som är helt ointressant för mig). Jag kommer köra slut på skäggoljan och sedan troligtvis återgå till babyoljan som fungerat minst lika bra under månaderna innan. I båda fallen har jag använt doftfri/parfymfri olja. Kanske att jag köper skäggoljan igen men då för att få olja med doft.",
+          "review_star_rating": "5",
+          "review_link": "https://www.amazon.com/gp/customer-reviews/R1WXBUU3YPXBSA",
+          "review_author_id": null,
+          "review_author": "Amazon Customer",
+          "review_author_url": null,
+          "review_author_avatar": "https://m.media-amazon.com/images/S/amazon-avatars-global/default.png",
+          "review_images": [],
+          "review_video": null,
+          "review_date": "Reviewed in Sweden on June 7, 2024",
+          "is_verified_purchase": true,
+          "reviewed_product_asin": "B078K36RQ1",
+          "reviewed_product_variant": {
+            "Scent": "Unscented",
+            "Size": "1 Fl Oz (Pack of 1)"
+          },
+          "is_vine": false
+        }
+      ],
+      "delivery": "FREE delivery Monday, December 1 on orders shipped by Amazon over $35 Or Prime members get FREE delivery Today 2 PM - 6 PM on eligible orders. Order within 7 hrs 47 mins. Join Prime",
+      "primary_delivery_time": "Monday, December 1",
+      "category": {
+        "id": "beauty",
+        "name": "Beauty & Personal Care"
+      },
+      "category_path": [
+        {
+          "id": "3760911",
+          "name": "Beauty & Personal Care",
+          "link": "https://www.amazon.com/Beauty-Makeup-Skin-Hair-Products/b/ref=dp_bc_1?ie=UTF8&node=3760911"
+        },
+        {
+          "id": "3778591",
+          "name": "Shave & Hair Removal",
+          "link": "https://www.amazon.com/Shaving-Hair-Removal-Personal-Care/b/ref=dp_bc_2?ie=UTF8&node=3778591"
+        },
+        {
+          "id": "13271079011",
+          "name": "Men's",
+          "link": "https://www.amazon.com/Mens-Shaving-Hair-Removal-Products/b/ref=dp_bc_3?ie=UTF8&node=13271079011"
+        },
+        {
+          "id": "13271118011",
+          "name": "Beard & Mustache Care",
+          "link": "https://www.amazon.com/Mens-Beard-Mustache-Care/b/ref=dp_bc_4?ie=UTF8&node=13271118011"
+        },
+        {
+          "id": "7655120011",
+          "name": "Beard Conditioners & Oils",
+          "link": "https://www.amazon.com/Beard-Conditioners-Oils/b/ref=dp_bc_5?ie=UTF8&node=7655120011"
+        }
+      ],
+      "product_variations_dimensions": [
+        "scent",
+        "size"
+      ],
+      "product_variations": {
+        "scent": [
+          {
+            "asin": "B07BQM8N5S",
+            "value": "Bay Rum",
+            "photo": "https://m.media-amazon.com/images/I/21zkvquvwgL.jpg",
+            "is_available": true
+          },
+          {
+            "asin": "B07BQLTSP6",
+            "value": "Cedar & Pine",
+            "photo": "https://m.media-amazon.com/images/I/31dZ5PcCL8L.jpg",
+            "is_available": true
+          },
+          {
+            "asin": "B07CGBYCN3",
+            "value": "Clary Sage",
+            "photo": "https://m.media-amazon.com/images/I/21nYjyhZixL.jpg",
+            "is_available": true
+          },
+          {
+            "asin": "B0D94NV5ZK",
+            "value": "Coffee Whiskey",
+            "photo": "https://m.media-amazon.com/images/I/41ko2MhaKcL.jpg",
+            "is_available": true
+          },
+          {
+            "asin": "B0C6FGBB7Z",
+            "value": "Majestic Oud",
+            "photo": "https://m.media-amazon.com/images/I/31t38nfiZBL.jpg",
+            "is_available": true
+          },
+          {
+            "asin": "B0D45TPD5T",
+            "value": "Palo Santo",
+            "photo": "https://m.media-amazon.com/images/I/31dU620R06L.jpg",
+            "is_available": true
+          },
+          {
+            "asin": "B078K36RQ1",
+            "value": "Sandalwood",
+            "photo": "https://m.media-amazon.com/images/I/31raxGO-2hL.jpg",
+            "is_available": true
+          },
+          {
+            "asin": "B07BKRJC71",
+            "value": "Sandalwood, Unscented",
+            "photo": "https://m.media-amazon.com/images/I/31Q7VSOYpgL.jpg",
+            "is_available": false
+          },
+          {
+            "asin": "B0FHL1358P",
+            "value": "Sea Salt",
+            "photo": "https://m.media-amazon.com/images/I/31Rg-oH6jSL.jpg",
+            "is_available": true
+          },
+          {
+            "asin": "B0C6FHPLHD",
+            "value": "Spiced Vanilla",
+            "photo": "https://m.media-amazon.com/images/I/31RlZaruf+L.jpg",
+            "is_available": true
+          },
+          {
+            "asin": "B0C6FLJ7W3",
+            "value": "Sweet Tobacco",
+            "photo": "https://m.media-amazon.com/images/I/313T0Od7ozL.jpg",
+            "is_available": true
+          },
+          {
+            "asin": "B0753JJZM3",
+            "value": "Unscented",
+            "photo": "https://m.media-amazon.com/images/I/21bR7zTA6KL.jpg",
+            "is_available": true
+          }
+        ],
+        "size": [
+          {
+            "asin": "B078K36RQ1",
+            "value": "1 Fl Oz (Pack of 1)",
+            "is_available": true
+          },
+          {
+            "asin": "B08BCTY1D7",
+            "value": "1 Fl Oz (Pack of 3)",
+            "is_available": true
+          },
+          {
+            "asin": "B07BK9W5BG",
+            "value": "1 Fl Oz (Pack of 2)",
+            "is_available": true
+          },
+          {
+            "asin": "B0F19816LC",
+            "value": "2 Ounce + 1 Fl Oz (Pack of 2)",
+            "is_available": false
+          }
+        ]
+      },
+      "all_product_variations": {
+        "B07BKQ3YNR": {
+          "scent": "Unscented",
+          "size": "1 Fl Oz (Pack of 2)"
+        },
+        "B0C6FHPLHD": {
+          "scent": "Spiced Vanilla",
+          "size": "1 Fl Oz (Pack of 1)"
+        },
+        "B08BCTY1D7": {
+          "scent": "Sandalwood",
+          "size": "1 Fl Oz (Pack of 3)"
+        },
+        "B0D94NV5ZK": {
+          "scent": "Coffee Whiskey",
+          "size": "1 Fl Oz (Pack of 1)"
+        },
+        "B08BDDXB94": {
+          "scent": "Cedar & Pine",
+          "size": "1 Fl Oz (Pack of 3)"
+        },
+        "B07BK9W5BG": {
+          "scent": "Sandalwood",
+          "size": "1 Fl Oz (Pack of 2)"
+        },
+        "B0F19816LC": {
+          "scent": "Spiced Vanilla",
+          "size": "2 Ounce + 1 Fl Oz (Pack of 2)"
+        },
+        "B0C6H6PW5Q": {
+          "scent": "Spiced Vanilla",
+          "size": "1 Fl Oz (Pack of 2)"
+        },
+        "B07BKRJC71": {
+          "scent": "Sandalwood, Unscented",
+          "size": "1 Fl Oz (Pack of 2)"
+        },
+        "B0753JJZM3": {
+          "scent": "Unscented",
+          "size": "1 Fl Oz (Pack of 1)"
+        },
+        "B08BDDSJL8": {
+          "scent": "Bay Rum",
+          "size": "1 Fl Oz (Pack of 3)"
+        },
+        "B078K36RQ1": {
+          "scent": "Sandalwood",
+          "size": "1 Fl Oz (Pack of 1)"
+        },
+        "B07BQLTSP6": {
+          "scent": "Cedar & Pine",
+          "size": "1 Fl Oz (Pack of 1)"
+        },
+        "B0C6FLJ7W3": {
+          "scent": "Sweet Tobacco",
+          "size": "1 Fl Oz (Pack of 1)"
+        },
+        "B0C6FGBB7Z": {
+          "scent": "Majestic Oud",
+          "size": "1 Fl Oz (Pack of 1)"
+        },
+        "B07BQM8N5S": {
+          "scent": "Bay Rum",
+          "size": "1 Fl Oz (Pack of 1)"
+        },
+        "B07JMDNVGG": {
+          "scent": "Unscented",
+          "size": "1 Fl Oz (Pack of 3)"
+        },
+        "B07CGBYCN3": {
+          "scent": "Clary Sage",
+          "size": "1 Fl Oz (Pack of 1)"
+        },
+        "B0D45TPD5T": {
+          "scent": "Palo Santo",
+          "size": "1 Fl Oz (Pack of 1)"
+        },
+        "B0FHL1358P": {
+          "scent": "Sea Salt",
+          "size": "1 Fl Oz (Pack of 1)"
+        }
+      },
+      "deal_badge": "Black Friday Deal",
+      "has_aplus": true,
+      "aplus_images": [
+        "https://m.media-amazon.com/images/S/aplus-media-library-service-media/f0014761-ec6e-47fe-b52a-55c8dce6ff28.jpg",
+        "https://m.media-amazon.com/images/S/aplus-media-library-service-media/8f6fe947-7926-4ead-96f6-674c2b374441.jpg"
+      ],
+      "has_brandstory": true,
+      "frequently_bought_together": [],
+      "landing_asin": "B078K36RQ1",
+      "parent_asin": "B0CWWZS5HQ"
+    }
+  }

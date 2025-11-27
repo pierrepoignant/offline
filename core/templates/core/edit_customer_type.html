@@ -1,0 +1,198 @@
+{% extends "base.html" %}
+
+{% block page_title_text %}{% if customer_type %}Edit Customer Type{% else %}Add Customer Type{% endif %}{% endblock %}
+
+{% block extra_styles %}
+    .form-container {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        max-width: 600px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #4a5568;
+    }
+    
+    .form-group input[type="text"],
+    .form-group input[type="color"] {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+    
+    .form-group input[type="color"] {
+        height: 50px;
+        cursor: pointer;
+    }
+    
+    .form-group input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .color-preview {
+        display: inline-block;
+        width: 30px;
+        height: 30px;
+        border-radius: 4px;
+        border: 2px solid #e2e8f0;
+        margin-left: 10px;
+        vertical-align: middle;
+    }
+    
+    .suggested-colors {
+        margin-top: 10px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+    
+    .suggested-color {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .suggested-color:hover {
+        border-color: #667eea;
+        transform: translateY(-1px);
+    }
+    
+    .suggested-color-box {
+        width: 24px;
+        height: 24px;
+        border-radius: 4px;
+        border: 1px solid #cbd5e0;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 30px;
+    }
+    
+    .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-primary {
+        background: #667eea;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background: #e2e8f0;
+        color: #4a5568;
+    }
+    
+    .btn-secondary:hover {
+        background: #cbd5e0;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="form-container">
+        <form method="POST">
+            <div class="form-group">
+                <label for="name">Customer Type Name *</label>
+                <input type="text" id="name" name="name" value="{{ customer_type.name if customer_type else '' }}" required autofocus>
+            </div>
+            
+            <div class="form-group">
+                <label for="color">Color</label>
+                <div style="display: flex; align-items: center;">
+                    <input type="color" id="color" name="color" value="{{ customer_type.color if customer_type and customer_type.color else '#667eea' }}" style="flex: 0 0 80px;">
+                    <input type="text" id="color_text" value="{{ customer_type.color if customer_type and customer_type.color else '#667eea' }}" style="flex: 1; margin-left: 10px;" placeholder="#667eea" pattern="^#[0-9A-Fa-f]{6}$">
+                    <span class="color-preview" id="color_preview" style="background-color: {{ customer_type.color if customer_type and customer_type.color else '#667eea' }};"></span>
+                </div>
+                <div class="suggested-colors">
+                    <div class="suggested-color" onclick="setColor('#F59E0B', 'Leads')">
+                        <span class="suggested-color-box" style="background-color: #F59E0B;"></span>
+                        <span>Leads</span>
+                    </div>
+                    <div class="suggested-color" onclick="setColor('#3B82F6', 'Prospect')">
+                        <span class="suggested-color-box" style="background-color: #3B82F6;"></span>
+                        <span>Prospect</span>
+                    </div>
+                    <div class="suggested-color" onclick="setColor('#10B981', 'Customer')">
+                        <span class="suggested-color-box" style="background-color: #10B981;"></span>
+                        <span>Customer</span>
+                    </div>
+                    <div class="suggested-color" onclick="setColor('#6B7280', 'Former Customer')">
+                        <span class="suggested-color-box" style="background-color: #6B7280;"></span>
+                        <span>Former Customer</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">{% if customer_type %}Update Customer Type{% else %}Create Customer Type{% endif %}</button>
+                <a href="{{ url_for('core.customer_types_list') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const colorInput = document.getElementById('color');
+    const colorText = document.getElementById('color_text');
+    const colorPreview = document.getElementById('color_preview');
+    
+    function updateColor(value) {
+        colorInput.value = value;
+        colorText.value = value;
+        colorPreview.style.backgroundColor = value;
+    }
+    
+    colorInput.addEventListener('input', function(e) {
+        updateColor(e.target.value);
+    });
+    
+    colorText.addEventListener('input', function(e) {
+        const value = e.target.value;
+        if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+            updateColor(value);
+        }
+    });
+    
+    function setColor(color, name) {
+        updateColor(color);
+        // If the name field matches the suggested name, update it
+        const nameInput = document.getElementById('name');
+        if (!nameInput.value || nameInput.value.toLowerCase() === name.toLowerCase()) {
+            nameInput.value = name;
+        }
+    }
+</script>
+{% endblock %}
+

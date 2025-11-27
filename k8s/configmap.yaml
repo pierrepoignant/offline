@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: offline-config
+data:
+  db_host: "postgresql-cfb9d8a7-o06c3efae.database.cloud.ovh.net"
+  db_port: "20184"
+  db_name: "offline"

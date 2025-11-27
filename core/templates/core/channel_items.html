@@ -1,0 +1,379 @@
+{% extends "base.html" %}
+
+
+
+{% block page_title_text %}🛒 {{ channel.name }} - Items{% endblock %}
+
+{% block extra_styles %}
+    .header-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .data-table thead {
+        background: #667eea;
+        color: white;
+    }
+    
+    .data-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .data-table td {
+        padding: 15px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .data-table tbody tr:hover {
+        background: #f7fafc;
+    }
+    
+    .data-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .btn-small {
+        padding: 6px 12px;
+        font-size: 0.875rem;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: inline-block;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-edit {
+        background: #667eea;
+        color: white;
+    }
+    
+    .btn-edit:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+    }
+    
+    .btn-delete {
+        background: #e53e3e;
+        color: white;
+    }
+    
+    .btn-delete:hover {
+        background: #c53030;
+        transform: translateY(-1px);
+    }
+    
+    .btn-add {
+        background: #48bb78;
+        color: white;
+    }
+    
+    .btn-add:hover {
+        background: #38a169;
+        transform: translateY(-1px);
+    }
+    
+    .no-data {
+        text-align: center;
+        padding: 60px 20px;
+        color: #718096;
+    }
+    
+    /* Modal/Overlay styles */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal-overlay.active {
+        display: flex;
+    }
+    
+    .modal {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+    
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .modal-header h3 {
+        margin: 0;
+        color: #2d3748;
+    }
+    
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #718096;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal-close:hover {
+        color: #2d3748;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #4a5568;
+    }
+    
+    .form-group input[type="text"],
+    .form-group select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 30px;
+    }
+    
+    .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-primary {
+        background: #667eea;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background: #e2e8f0;
+        color: #4a5568;
+    }
+    
+    .btn-secondary:hover {
+        background: #cbd5e0;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="header-actions">
+        <div>
+            <h2 style="margin: 0; color: #2d3748;">Items for {{ channel.name }}</h2>
+            <a href="{{ url_for('core.channels_list') }}" style="color: #667eea; text-decoration: none; font-size: 0.875rem;">← Back to Channels</a>
+        </div>
+        {% if session.is_admin %}
+        <button onclick="openAddModal()" class="btn-small btn-add">➕ Add Item</button>
+        {% endif %}
+    </div>
+    
+    {% if channel_items %}
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Channel Code</th>
+                    <th>Channel Name</th>
+                    <th>Essor Code</th>
+                    <th>Essor Name</th>
+                    <th>Brand</th>
+                    {% if session.is_admin %}
+                    <th>Actions</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for channel_item in channel_items %}
+                <tr>
+                    <td><strong>{{ channel_item.channel_code }}</strong></td>
+                    <td>{{ channel_item.channel_name }}</td>
+                    <td>{{ channel_item.item.essor_code }}</td>
+                    <td>{{ channel_item.item.essor_name }}</td>
+                    <td>{{ channel_item.item.brand.name }}</td>
+                    {% if session.is_admin %}
+                    <td>
+                        <button onclick="openEditModal({{ channel_item.id }}, '{{ channel_item.channel_code }}', '{{ channel_item.channel_name }}')" class="btn-small btn-edit">Edit</button>
+                        <form method="POST" action="{{ url_for('core.delete_channel_item', channel_id=channel.id, channel_item_id=channel_item.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to remove this item from the channel?');">
+                            <button type="submit" class="btn-small btn-delete">Remove</button>
+                        </form>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="no-data">
+        <h3>No items found for this channel</h3>
+        <p>Add items to this channel to get started.</p>
+        {% if session.is_admin %}
+        <button onclick="openAddModal()" class="btn-small btn-add" style="margin-top: 20px;">➕ Add Item</button>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    <!-- Add Item Modal -->
+    <div id="addModal" class="modal-overlay" onclick="if(event.target === this) closeAddModal()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3>Add Item to Channel</h3>
+                <button class="modal-close" onclick="closeAddModal()">×</button>
+            </div>
+            <form method="POST" action="{{ url_for('core.create_channel_item', channel_id=channel.id) }}" id="addForm">
+                <div class="form-group">
+                    <label for="item_id">Item *</label>
+                    <select id="item_id" name="item_id" required>
+                        <option value="">Select an item</option>
+                        {% for item in items %}
+                        <option value="{{ item.id }}">{{ item.essor_code }} - {{ item.essor_name }} ({{ item.brand.name }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="channel_code">Channel Code *</label>
+                    <input type="text" id="channel_code" name="channel_code" required autofocus>
+                </div>
+                
+                <div class="form-group">
+                    <label for="channel_name">Channel Name *</label>
+                    <input type="text" id="channel_name" name="channel_name" required>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Add Item</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeAddModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Edit Item Modal -->
+    <div id="editModal" class="modal-overlay" onclick="if(event.target === this) closeEditModal()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3>Edit Channel Item</h3>
+                <button class="modal-close" onclick="closeEditModal()">×</button>
+            </div>
+            <form method="POST" action="" id="editForm">
+                <div class="form-group">
+                    <label for="edit_channel_code">Channel Code *</label>
+                    <input type="text" id="edit_channel_code" name="channel_code" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="edit_channel_name">Channel Name *</label>
+                    <input type="text" id="edit_channel_name" name="channel_name" required>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">Update</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function openAddModal() {
+        document.getElementById('addModal').classList.add('active');
+        document.getElementById('item_id').focus();
+    }
+    
+    function closeAddModal() {
+        document.getElementById('addModal').classList.remove('active');
+        document.getElementById('addForm').reset();
+    }
+    
+    function openEditModal(channelItemId, channelCode, channelName) {
+        document.getElementById('editForm').action = "{{ url_for('core.edit_channel_item', channel_id=channel.id, channel_item_id=0) }}".replace('0', channelItemId);
+        document.getElementById('edit_channel_code').value = channelCode;
+        document.getElementById('edit_channel_name').value = channelName;
+        document.getElementById('editModal').classList.add('active');
+        document.getElementById('edit_channel_code').focus();
+    }
+    
+    function closeEditModal() {
+        document.getElementById('editModal').classList.remove('active');
+        document.getElementById('editForm').reset();
+    }
+    
+    // Close modals on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeAddModal();
+            closeEditModal();
+        }
+    });
+</script>
+{% endblock %}
+

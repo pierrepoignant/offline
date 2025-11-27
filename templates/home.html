@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block page_title_text %}Dashboard{% endblock %}
+
+{% block extra_styles %}
+    .welcome-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        padding: 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .welcome-section h2 {
+        margin: 0 0 10px 0;
+        font-size: 1.75rem;
+    }
+    
+    .welcome-section p {
+        margin: 0;
+        opacity: 0.9;
+        font-size: 1rem;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="welcome-section">
+        <h2>Welcome back, {{ username }}! 👋</h2>
+        <p>Manage your offline team data and track sellthrough performance</p>
+    </div>
+{% endblock %}
+

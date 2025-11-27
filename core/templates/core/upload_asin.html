@@ -1,0 +1,312 @@
+{% extends "base.html" %}
+
+{% block page_title_text %}Upload Item-ASIN Mapping{% endblock %}
+
+{% block extra_styles %}
+    .import-container {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        max-width: 800px;
+    }
+    
+    .upload-section {
+        margin-bottom: 30px;
+    }
+    
+    .upload-area {
+        border: 2px dashed #cbd5e0;
+        border-radius: 8px;
+        padding: 40px;
+        text-align: center;
+        background: #f7fafc;
+        transition: all 0.2s;
+    }
+    
+    .upload-area:hover {
+        border-color: #667eea;
+        background: #edf2f7;
+    }
+    
+    .upload-area.dragover {
+        border-color: #667eea;
+        background: #e6fffa;
+    }
+    
+    .file-input {
+        display: none;
+    }
+    
+    .file-label {
+        display: inline-block;
+        padding: 12px 24px;
+        background: #667eea;
+        color: white;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+    
+    .file-label:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+    }
+    
+    .file-name {
+        margin-top: 15px;
+        color: #4a5568;
+        font-weight: 500;
+    }
+    
+    .instructions {
+        background: #f7fafc;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        border-left: 4px solid #667eea;
+    }
+    
+    .instructions h3 {
+        margin: 0 0 15px 0;
+        color: #2d3748;
+        font-size: 1.125rem;
+    }
+    
+    .instructions ul {
+        margin: 0;
+        padding-left: 20px;
+        color: #4a5568;
+    }
+    
+    .instructions li {
+        margin-bottom: 8px;
+    }
+    
+    .instructions code {
+        background: #e2e8f0;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 0.875rem;
+    }
+    
+    .btn-submit {
+        padding: 12px 24px;
+        background: #48bb78;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 16px;
+    }
+    
+    .btn-submit:hover {
+        background: #38a169;
+        transform: translateY(-1px);
+    }
+    
+    .btn-submit:disabled {
+        background: #cbd5e0;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .results-section {
+        margin-top: 30px;
+        padding: 20px;
+        background: #f7fafc;
+        border-radius: 8px;
+    }
+    
+    .results-section h3 {
+        margin: 0 0 15px 0;
+        color: #2d3748;
+    }
+    
+    .results-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .stat-box {
+        background: white;
+        padding: 15px;
+        border-radius: 6px;
+        text-align: center;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-box .value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #667eea;
+        margin-bottom: 5px;
+    }
+    
+    .stat-box .label {
+        font-size: 0.875rem;
+        color: #718096;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .errors-list {
+        max-height: 300px;
+        overflow-y: auto;
+        background: white;
+        padding: 15px;
+        border-radius: 6px;
+        border: 1px solid #fed7d7;
+    }
+    
+    .errors-list ul {
+        margin: 0;
+        padding-left: 20px;
+        color: #c53030;
+    }
+    
+    .errors-list li {
+        margin-bottom: 5px;
+        font-size: 0.875rem;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="import-container">
+        <div class="instructions">
+            <h3>📋 CSV Import Instructions</h3>
+            <ul>
+                <li>CSV file must include the following columns:
+                    <ul>
+                        <li><code>item</code> - Item essor_code (must exist in items table)</li>
+                        <li><code>asin</code> - Amazon ASIN code</li>
+                        <li><code>title</code> - ASIN title (optional, used when creating new ASIN)</li>
+                    </ul>
+                </li>
+                <li>If item exists (by essor_code), the system will:
+                    <ul>
+                        <li>Check if ASIN exists in database</li>
+                        <li>If ASIN doesn't exist, create it with the provided title</li>
+                        <li>Update the item with the asin_id</li>
+                    </ul>
+                </li>
+                <li>Items that don't exist will be skipped</li>
+            </ul>
+        </div>
+        
+        <form method="POST" enctype="multipart/form-data" id="importForm" action="{{ url_for('core.upload_asin_mapping') }}">
+            <div class="upload-section">
+                <div class="upload-area" id="uploadArea">
+                    <p style="margin-bottom: 15px; color: #4a5568;">📁 Drag and drop your CSV file here</p>
+                    <label for="file" class="file-label">Choose File</label>
+                    <input type="file" id="file" name="file" accept=".csv" class="file-input" required>
+                    <div class="file-name" id="fileName" style="display: none;"></div>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 10px; margin-top: 20px;">
+                <button type="submit" class="btn-submit" id="submitBtn" disabled>📥 Import Mapping</button>
+            </div>
+        </form>
+        
+        {% if results %}
+        <div class="results-section">
+            <h3>Import Results</h3>
+            <div class="results-stats">
+                <div class="stat-box">
+                    <div class="value">{{ results.processed }}</div>
+                    <div class="label">Processed</div>
+                </div>
+                <div class="stat-box">
+                    <div class="value">{{ results.created }}</div>
+                    <div class="label">ASINs Created</div>
+                </div>
+                <div class="stat-box">
+                    <div class="value">{{ results.updated }}</div>
+                    <div class="label">Items Updated</div>
+                </div>
+                <div class="stat-box">
+                    <div class="value">{{ results.skipped }}</div>
+                    <div class="label">Skipped</div>
+                </div>
+            </div>
+            
+            {% if results.errors %}
+            <div>
+                <h4 style="color: #c53030; margin-bottom: 10px;">Errors ({{ results.errors|length }})</h4>
+                <div class="errors-list">
+                    <ul>
+                        {% for error in results.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const fileInput = document.getElementById('file');
+    const fileName = document.getElementById('fileName');
+    const submitBtn = document.getElementById('submitBtn');
+    const uploadArea = document.getElementById('uploadArea');
+    const importForm = document.getElementById('importForm');
+    
+    fileInput.addEventListener('change', function(e) {
+        if (e.target.files.length > 0) {
+            fileName.textContent = 'Selected: ' + e.target.files[0].name;
+            fileName.style.display = 'block';
+            submitBtn.disabled = false;
+        } else {
+            fileName.style.display = 'none';
+            submitBtn.disabled = true;
+        }
+    });
+    
+    // Drag and drop
+    uploadArea.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        uploadArea.classList.add('dragover');
+    });
+    
+    uploadArea.addEventListener('dragleave', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+    });
+    
+    uploadArea.addEventListener('drop', function(e) {
+        e.preventDefault();
+        uploadArea.classList.remove('dragover');
+        
+        if (e.dataTransfer.files.length > 0) {
+            fileInput.files = e.dataTransfer.files;
+            fileName.textContent = 'Selected: ' + e.dataTransfer.files[0].name;
+            fileName.style.display = 'block';
+            submitBtn.disabled = false;
+        }
+    });
+    
+    // Form submission handler
+    importForm.addEventListener('submit', function(e) {
+        if (submitBtn.disabled) {
+            e.preventDefault();
+            alert('Please select a CSV file first');
+            return false;
+        }
+        
+        // Show loading state
+        submitBtn.disabled = true;
+        submitBtn.textContent = '⏳ Processing...';
+    });
+</script>
+{% endblock %}
+

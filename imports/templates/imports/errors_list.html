@@ -1,0 +1,222 @@
+{% extends "base.html" %}
+
+
+
+{% block page_title_text %}📋 Import Errors Log{% endblock %}
+
+{% block extra_styles %}
+    .filter-section {
+        background: #f7fafc;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 25px;
+    }
+    
+    .filter-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        align-items: end;
+    }
+    
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .filter-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #4a5568;
+        font-size: 0.875rem;
+    }
+    
+    .filter-group select,
+    .filter-group input {
+        width: 100%;
+        padding: 10px 15px;
+        font-size: 14px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        background: white;
+    }
+    
+    .filter-group button {
+        padding: 10px 20px;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    
+    .filter-group button:hover {
+        background: #5568d3;
+    }
+    
+    .table-container {
+        overflow-x: auto;
+        margin-top: 20px;
+    }
+    
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    thead {
+        background: #667eea;
+        color: white;
+    }
+    
+    th, td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    tbody tr:hover {
+        background: #f7fafc;
+    }
+    
+    .badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+    
+    .badge-snowflake {
+        background: #4299e1;
+        color: white;
+    }
+    
+    .badge-csv {
+        background: #48bb78;
+        color: white;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    
+    .pagination a,
+    .pagination span {
+        padding: 8px 12px;
+        border: 1px solid #e2e8f0;
+        border-radius: 4px;
+        text-decoration: none;
+        color: #4a5568;
+    }
+    
+    .pagination a:hover {
+        background: #f7fafc;
+    }
+    
+    .pagination .current {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="filter-section">
+        <form method="GET" action="{{ url_for('imports.import_errors_list') }}">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="import_channel">Import Channel</label>
+                    <select name="import_channel" id="import_channel">
+                        <option value="">All Channels</option>
+                        {% for channel in import_channels %}
+                        <option value="{{ channel }}" {% if current_filters.import_channel == channel %}selected{% endif %}>
+                            {{ channel }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="date_from">Date From</label>
+                    <input type="date" name="date_from" id="date_from" value="{{ current_filters.date_from or '' }}">
+                </div>
+                <div class="filter-group">
+                    <label for="date_to">Date To</label>
+                    <input type="date" name="date_to" id="date_to" value="{{ current_filters.date_to or '' }}">
+                </div>
+                <div class="filter-group">
+                    <button type="submit">🔍 Filter</button>
+                </div>
+            </div>
+        </form>
+    </div>
+    
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Import Channel</th>
+                    <th>Import Date</th>
+                    <th>Row Number</th>
+                    <th>Error Message</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for error in import_errors.items %}
+                <tr>
+                    <td>{{ error.id }}</td>
+                    <td>
+                        <span class="badge badge-{{ error.import_channel }}">{{ error.import_channel }}</span>
+                    </td>
+                    <td>{{ error.import_date.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                    <td>{{ error.row_number or 'N/A' }}</td>
+                    <td>
+                        {% if error.error_message %}
+                            {{ error.error_message[:100] }}{% if error.error_message|length > 100 %}...{% endif %}
+                        {% else %}
+                            <em>No message</em>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <a href="{{ url_for('imports.import_error_detail', error_id=error.id) }}" class="btn btn-primary" style="padding: 6px 12px; font-size: 12px;">View</a>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="6" style="text-align: center; padding: 40px;">
+                        <em>No import errors found</em>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+    {% if import_errors.pages > 1 %}
+    <div class="pagination">
+        {% if import_errors.has_prev %}
+            <a href="{{ url_for('imports.import_errors_list', page=import_errors.prev_num, **current_filters) }}">« Previous</a>
+        {% endif %}
+        
+        <span class="current">Page {{ import_errors.page }} of {{ import_errors.pages }}</span>
+        
+        {% if import_errors.has_next %}
+            <a href="{{ url_for('imports.import_errors_list', page=import_errors.next_num, **current_filters) }}">Next »</a>
+        {% endif %}
+    </div>
+    {% endif %}
+{% endblock %}
+

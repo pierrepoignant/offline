@@ -1,0 +1,450 @@
+{% extends "base.html" %}
+
+
+
+{% block page_title_text %}🏷️ Netsuite Codes{% endblock %}
+
+{% block extra_styles %}
+    .header-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .data-table thead {
+        background: #667eea;
+        color: white;
+    }
+    
+    .data-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .data-table td {
+        padding: 15px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .data-table tbody tr:hover {
+        background: #f7fafc;
+    }
+    
+    .data-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .btn-small {
+        padding: 6px 12px;
+        font-size: 0.875rem;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: inline-block;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-edit {
+        background: #667eea;
+        color: white;
+    }
+    
+    .btn-edit:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+    }
+    
+    .btn-delete {
+        background: #e53e3e;
+        color: white;
+    }
+    
+    .btn-delete:hover {
+        background: #c53030;
+        transform: translateY(-1px);
+    }
+    
+    .btn-add {
+        background: #48bb78;
+        color: white;
+    }
+    
+    .btn-add:hover {
+        background: #38a169;
+        transform: translateY(-1px);
+    }
+    
+    .no-data {
+        text-align: center;
+        padding: 60px 20px;
+        color: #718096;
+    }
+    
+    .info-box {
+        background: #e6fffa;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        border-left: 4px solid #38b2ac;
+    }
+    
+    .info-box p {
+        margin: 0;
+        color: #234e52;
+        font-size: 0.875rem;
+    }
+    
+    .filter-section {
+        background: #f7fafc;
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 15px;
+    }
+    
+    .filter-section label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-weight: 600;
+        color: #4a5568;
+        font-size: 0.875rem;
+        cursor: pointer;
+    }
+    
+    .filter-section input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+        cursor: pointer;
+    }
+    
+    .filter-section .btn-clear {
+        padding: 8px 16px;
+        font-size: 0.875rem;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: inline-block;
+        background: #e2e8f0;
+        color: #4a5568;
+    }
+    
+    .filter-section .btn-clear:hover {
+        background: #cbd5e0;
+    }
+    
+    /* Modal/Overlay styles */
+    .modal-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal-overlay.active {
+        display: flex;
+    }
+    
+    .modal {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        max-width: 900px;
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+    
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .modal-header h3 {
+        margin: 0;
+        color: #2d3748;
+    }
+    
+    .modal-close {
+        background: none;
+        border: none;
+        font-size: 28px;
+        cursor: pointer;
+        color: #718096;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+    }
+    
+    .modal-close:hover {
+        color: #2d3748;
+    }
+    
+    .modal-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+    }
+    
+    .modal-table th {
+        background: #667eea;
+        color: white;
+        padding: 12px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .modal-table td {
+        padding: 12px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .modal-table tbody tr:hover {
+        background: #f7fafc;
+    }
+    
+    .modal-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .loading {
+        text-align: center;
+        padding: 40px;
+        color: #718096;
+    }
+    
+    .btn-view {
+        background: #9f7aea;
+        color: white;
+        margin-right: 5px;
+    }
+    
+    .btn-view:hover {
+        background: #805ad5;
+        transform: translateY(-1px);
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="info-box">
+        <p><strong>ℹ️ Info:</strong> Netsuite codes are used to map codes from Netsuite imports to channels and customers. When you save a mapping, all existing Netsuite records with that code will be updated to use the correct channel.</p>
+    </div>
+    
+    <div class="filter-section">
+        <form method="GET" action="{{ url_for('netsuite.netsuite_codes_list') }}" style="display: flex; align-items: center; gap: 15px;">
+            <label>
+                <input type="checkbox" name="filter_no_channel" value="1" {% if filter_no_channel %}checked{% endif %} onchange="this.form.submit()">
+                Show only codes without channel
+            </label>
+            {% if filter_no_channel %}
+            <a href="{{ url_for('netsuite.netsuite_codes_list') }}" class="btn-clear">Clear Filter</a>
+            {% endif %}
+        </form>
+    </div>
+    
+    <div class="header-actions">
+        <h2 style="margin: 0; color: #2d3748;">All Netsuite Codes{% if filter_no_channel %} (No Channel Only){% endif %}</h2>
+        {% if session.is_admin %}
+        <a href="{{ url_for('netsuite.create_netsuite_code') }}" class="btn-small btn-add">➕ Add Netsuite Code</a>
+        {% endif %}
+    </div>
+    
+    {% if netsuite_codes %}
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Netsuite Code</th>
+                    <th>Netsuite Name</th>
+                    <th>Channel</th>
+                    <th>Customer</th>
+                    <th>Revenues (2024)</th>
+                    <th>Revenues (2025)</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for netsuite_code in netsuite_codes %}
+                <tr>
+                    <td><strong>{{ netsuite_code.netsuite_code }}</strong></td>
+                    <td>{{ netsuite_code.netsuite_name or '-' }}</td>
+                    <td>{{ netsuite_code.channel.name if netsuite_code.channel else '-' }}</td>
+                    <td>{{ netsuite_code.customer.name if netsuite_code.customer else '-' }}</td>
+                    <td>
+                        {% set rev_2024 = revenues_by_code.get(netsuite_code.netsuite_code, {}).get('2024', 0) %}
+                        {% if rev_2024 > 0 %}
+                            ${{ "{:,.2f}".format(rev_2024) }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% set rev_2025 = revenues_by_code.get(netsuite_code.netsuite_code, {}).get('2025', 0) %}
+                        {% if rev_2025 > 0 %}
+                            ${{ "{:,.2f}".format(rev_2025) }}
+                        {% else %}
+                            -
+                        {% endif %}
+                    </td>
+                    <td>
+                        <button onclick="viewNetsuiteData('{{ netsuite_code.netsuite_code }}')" class="btn-small btn-view">View</button>
+                        {% if session.is_admin %}
+                        <a href="{{ url_for('netsuite.edit_netsuite_code', netsuite_code_id=netsuite_code.id) }}" class="btn-small btn-edit">Edit</a>
+                        <form method="POST" action="{{ url_for('netsuite.delete_netsuite_code', netsuite_code_id=netsuite_code.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete netsuite code {{ netsuite_code.netsuite_code }}?');">
+                            <button type="submit" class="btn-small btn-delete">Delete</button>
+                        </form>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="no-data">
+        <h3>No netsuite codes found</h3>
+        <p>Create your first netsuite code mapping to get started.</p>
+        {% if session.is_admin %}
+        <a href="{{ url_for('netsuite.create_netsuite_code') }}" class="btn-small btn-add" style="margin-top: 20px;">➕ Add Netsuite Code</a>
+        {% endif %}
+    </div>
+    {% endif %}
+    
+    <!-- View Netsuite Data Modal -->
+    <div id="viewModal" class="modal-overlay" onclick="if(event.target === this) closeViewModal()">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h3 id="modalTitle">Netsuite Data</h3>
+                <button class="modal-close" onclick="closeViewModal()">×</button>
+            </div>
+            <div id="modalContent">
+                <div class="loading">Loading...</div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function viewNetsuiteData(retailerCode) {
+        const modal = document.getElementById('viewModal');
+        const modalContent = document.getElementById('modalContent');
+        const modalTitle = document.getElementById('modalTitle');
+        
+        // Show modal with loading state
+        modal.classList.add('active');
+        modalContent.innerHTML = '<div class="loading">Loading...</div>';
+        modalTitle.textContent = `Netsuite Data for Code: ${retailerCode}`;
+        
+        // Fetch data
+        fetch(`{{ url_for('netsuite.api_netsuite_data_by_code') }}?retailer_code=${encodeURIComponent(retailerCode)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    modalContent.innerHTML = `<div class="no-data"><p style="color: #e53e3e;">Error: ${data.error}</p></div>`;
+                    return;
+                }
+                
+                if (data.count === 0) {
+                    modalContent.innerHTML = '<div class="no-data"><h3>No netsuite data found</h3><p>No records found for this retailer code.</p></div>';
+                    return;
+                }
+                
+                // Build table HTML
+                let tableHTML = `
+                    <p style="margin-bottom: 15px; color: #4a5568;"><strong>Total records: ${data.count}</strong></p>
+                    <table class="modal-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Brand</th>
+                                <th>Item</th>
+                                <th>Channel</th>
+                                <th>Customer</th>
+                                <th>Revenues</th>
+                                <th>Units</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                `;
+                
+                data.data.forEach(record => {
+                    tableHTML += `
+                        <tr>
+                            <td>${record.date || '-'}</td>
+                            <td>${record.brand || '-'}</td>
+                            <td>${record.item || '-'}</td>
+                            <td>${record.channel || '-'}</td>
+                            <td>${record.customer || '-'}</td>
+                            <td>$${record.revenues.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                            <td>${record.units.toLocaleString('en-US')}</td>
+                        </tr>
+                    `;
+                });
+                
+                tableHTML += `
+                        </tbody>
+                    </table>
+                `;
+                
+                modalContent.innerHTML = tableHTML;
+            })
+            .catch(error => {
+                console.error('Error fetching netsuite data:', error);
+                modalContent.innerHTML = `<div class="no-data"><p style="color: #e53e3e;">Error loading data: ${error.message}</p></div>`;
+            });
+    }
+    
+    function closeViewModal() {
+        document.getElementById('viewModal').classList.remove('active');
+    }
+    
+    // Close modal on Escape key
+    document.addEventListener('keydown', function(event) {
+        if (event.key === 'Escape') {
+            closeViewModal();
+        }
+    });
+</script>
+{% endblock %}
+

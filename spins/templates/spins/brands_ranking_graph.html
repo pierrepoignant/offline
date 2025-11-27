@@ -1,0 +1,356 @@
+{% extends "base.html" %}
+
+{% block page_title_text %}📊 SPINS Brands Ranking Graph{% endblock %}
+
+{% block extra_styles %}
+    .header-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .filter-section {
+        background: #f7fafc;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 25px;
+    }
+    
+    .filter-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        align-items: end;
+    }
+    
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .filter-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #4a5568;
+        font-size: 0.875rem;
+    }
+    
+    .filter-group select {
+        width: 100%;
+        padding: 10px 15px;
+        font-size: 14px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        background: white;
+    }
+    
+    .filter-group select:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .filter-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 14px;
+    }
+    
+    .btn-primary {
+        background: #667eea;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+    }
+    
+    .chart-container {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        position: relative;
+        height: 600px;
+        margin-bottom: 20px;
+    }
+    
+    .chart-loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 600px;
+        color: #718096;
+        font-size: 16px;
+    }
+    
+    .chart-error {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 600px;
+        color: #e53e3e;
+        font-size: 16px;
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .info-box {
+        background: #edf2f7;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        border-left: 4px solid #667eea;
+    }
+    
+    .no-data {
+        text-align: center;
+        padding: 60px 20px;
+        color: #718096;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="header-actions">
+        <h2 style="margin: 0; color: #2d3748;">SPINS Brands Ranking Graph</h2>
+    </div>
+    
+    <div class="filter-section">
+        <form method="GET" action="{{ url_for('spins.brands_ranking_graph') }}" id="filterForm">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="channel_id">Channel *</label>
+                    <select id="channel_id" name="channel_id" required>
+                        <option value="">Select a channel</option>
+                        {% for channel in channels %}
+                        <option value="{{ channel.id }}" {% if selected_channel_id == channel.id %}selected{% endif %}>{{ channel.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="metric">Rank By</label>
+                    <select id="metric" name="metric">
+                        <option value="revenues" {% if selected_metric == 'revenues' %}selected{% endif %}>Revenues</option>
+                        <option value="units" {% if selected_metric == 'units' %}selected{% endif %}>Units</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-primary">📊 Show Ranking Graph</button>
+            </div>
+        </form>
+    </div>
+    
+    {% if selected_channel %}
+    <div class="info-box">
+        <strong>Channel:</strong> {{ selected_channel.name }} | 
+        <strong>Ranked by:</strong> {{ 'Units' if selected_metric == 'units' else 'Revenues ($)' }} |
+        <strong>Top 20 Brands</strong>
+    </div>
+    {% endif %}
+    
+    {% if selected_channel_id %}
+    <div class="chart-container">
+        <canvas id="rankingChart"></canvas>
+    </div>
+    {% else %}
+    <div class="no-data">
+        <h3>Select a channel to view ranking graph</h3>
+        <p>Please select a channel to see the top 20 brands ranking over time.</p>
+    </div>
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        let chart = null;
+        
+        {% if selected_channel_id %}
+        // Load chart data when page loads
+        function loadChartData() {
+            const channelId = {{ selected_channel_id }};
+            const metric = document.getElementById('metric').value;
+            
+            // Show loading state
+            const chartContainer = document.querySelector('.chart-container');
+            chartContainer.innerHTML = '<div class="chart-loading">Loading ranking data...</div>';
+            
+            // Fetch data
+            fetch(`{{ url_for('spins.api_brands_ranking_data') }}?channel_id=${channelId}&metric=${metric}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        chartContainer.innerHTML = `<div class="chart-error">Error: ${data.error}</div>`;
+                        return;
+                    }
+                    
+                    if (!data.weeks || data.weeks.length === 0) {
+                        chartContainer.innerHTML = '<div class="chart-error">No data available for the selected channel.</div>';
+                        return;
+                    }
+                    
+                    // Restore canvas
+                    chartContainer.innerHTML = '<canvas id="rankingChart"></canvas>';
+                    const ctx = document.getElementById('rankingChart').getContext('2d');
+                    
+                    // Update or create chart
+                    if (chart) {
+                        chart.destroy();
+                    }
+                    
+                    // Prepare datasets - one line per brand
+                    const datasets = data.brands_data.map(brand => ({
+                        label: brand.brand_name,
+                        data: brand.rankings,
+                        borderColor: brand.color,
+                        backgroundColor: brand.color.replace('rgb', 'rgba').replace(')', ', 0.1)'),
+                        borderWidth: brand.border_width,
+                        fill: false,
+                        tension: 0.3,
+                        pointRadius: 3,
+                        pointHoverRadius: 6,
+                        spanGaps: false  // Show gaps when brand is not in top 20
+                    }));
+                    
+                    chart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.weeks,
+                            datasets: datasets
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: `Top 20 Brands Ranking Over Time (Ranked by ${data.metric_label})`,
+                                    font: {
+                                        size: 18,
+                                        weight: 'bold'
+                                    },
+                                    padding: {
+                                        bottom: 20
+                                    }
+                                },
+                                legend: {
+                                    display: true,
+                                    position: 'right',
+                                    align: 'start',
+                                    padding: {
+                                        top: 40  // Add top padding to align first legend item with graph top
+                                    },
+                                    labels: {
+                                        boxWidth: 12,
+                                        padding: 10,
+                                        font: {
+                                            size: 11
+                                        },
+                                        generateLabels: function(chart) {
+                                            const original = Chart.defaults.plugins.legend.labels.generateLabels;
+                                            const labels = original.call(this, chart);
+                                            
+                                            // Make BOKA label bolder
+                                            labels.forEach(label => {
+                                                if (label.text && label.text.toUpperCase() === 'BOKA') {
+                                                    label.fontStyle = 'bold';
+                                                    label.fontSize = 13;
+                                                }
+                                            });
+                                            
+                                            return labels;
+                                        }
+                                    }
+                                },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                    callbacks: {
+                                        label: function(context) {
+                                            const value = context.parsed.y;
+                                            if (value === null || value === undefined) {
+                                                return context.dataset.label + ': Not in top 20';
+                                            }
+                                            return context.dataset.label + ': Rank #' + value;
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    reverse: true,  // Rank 1 at top
+                                    beginAtZero: false,
+                                    min: 1,
+                                    max: 20,
+                                    ticks: {
+                                        stepSize: 1,
+                                        callback: function(value) {
+                                            return '#' + value;
+                                        }
+                                    },
+                                    title: {
+                                        display: true,
+                                        text: 'Ranking (1 = Best)'
+                                    }
+                                },
+                                x: {
+                                    ticks: {
+                                        maxTicksLimit: 20,
+                                        callback: function(value, index) {
+                                            const labels = data.weeks;
+                                            if (labels && labels.length > 20) {
+                                                const step = Math.ceil(labels.length / 20);
+                                                return index % step === 0 ? labels[index] : '';
+                                            }
+                                            return labels && labels[index] ? labels[index] : '';
+                                        }
+                                    },
+                                    title: {
+                                        display: true,
+                                        text: 'Week Ending Date'
+                                    }
+                                }
+                            },
+                            interaction: {
+                                mode: 'nearest',
+                                axis: 'x',
+                                intersect: false
+                            }
+                        }
+                    });
+                })
+                .catch(error => {
+                    const chartContainer = document.querySelector('.chart-container');
+                    chartContainer.innerHTML = `<div class="chart-error">Error loading data: ${error.message}</div>`;
+                    console.error('Error:', error);
+                });
+        }
+        
+        // Load initial data
+        loadChartData();
+        
+        // Reload when metric changes
+        document.getElementById('metric').addEventListener('change', function() {
+            loadChartData();
+        });
+        {% endif %}
+    </script>
+{% endblock %}
+

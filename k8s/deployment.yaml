@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: offline-app
+  labels:
+    app: offline-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: offline-app
+  template:
+    metadata:
+      labels:
+        app: offline-app
+    spec:
+      imagePullSecrets:
+      - name: ovh-registry-secret
+      containers:
+      - name: offline-app
+        image: 8ie06lx5.c1.gra9.container-registry.ovh.net/offline/offline-app:latest
+        ports:
+        - containerPort: 5000
+          name: flask
+          protocol: TCP
+        env:
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: offline-config
+              key: db_host
+        - name: DB_PORT
+          valueFrom:
+            configMapKeyRef:
+              name: offline-config
+              key: db_port
+        - name: DB_USER
+          valueFrom:
+            secretKeyRef:
+              name: offline-secrets
+              key: db_user
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: offline-secrets
+              key: db_password
+        - name: DB_NAME
+          valueFrom:
+            configMapKeyRef:
+              name: offline-config
+              key: db_name
+        - name: FLASK_PORT
+          value: "5000"
+        - name: FLASK_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: offline-secrets
+              key: flask_secret_key
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 5000
+          initialDelaySeconds: 10
+          periodSeconds: 5
+

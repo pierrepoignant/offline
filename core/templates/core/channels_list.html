@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+{% block page_title_text %}Channels{% endblock %}
+
+{% block extra_styles %}
+    .header-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .data-table thead {
+        background: #667eea;
+        color: white;
+    }
+    
+    .data-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .data-table td {
+        padding: 15px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .data-table tbody tr:hover {
+        background: #f7fafc;
+    }
+    
+    .data-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .btn-small {
+        padding: 6px 12px;
+        font-size: 0.875rem;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: inline-block;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-edit {
+        background: #667eea;
+        color: white;
+    }
+    
+    .btn-edit:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+    }
+    
+    .btn-add {
+        background: #48bb78;
+        color: white;
+    }
+    
+    .btn-add:hover {
+        background: #38a169;
+        transform: translateY(-1px);
+    }
+    
+    .no-data {
+        text-align: center;
+        padding: 60px 20px;
+        color: #718096;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="header-actions">
+        <h2 style="margin: 0; color: #2d3748;">All Channels</h2>
+        {% if session.is_admin %}
+        <a href="{{ url_for('core.create_channel') }}" class="btn-small btn-add">➕ Add Channel</a>
+        {% endif %}
+    </div>
+    
+    {% if channels %}
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Include in Netsuite</th>
+                    {% if session.is_admin %}
+                    <th>Actions</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for channel in channels %}
+                <tr>
+                    <td><strong>{{ channel.name }}</strong></td>
+                    <td>
+                        {% if channel.netsuite_include %}
+                            <span style="color: #48bb78; font-weight: 600;">✓ Yes</span>
+                        {% else %}
+                            <span style="color: #e53e3e; font-weight: 600;">✗ No</span>
+                        {% endif %}
+                    </td>
+                    {% if session.is_admin %}
+                    <td>
+                        <a href="{{ url_for('core.edit_channel', channel_id=channel.id) }}" class="btn-small btn-edit">Edit</a>
+                        <a href="{{ url_for('core.channel_items', channel_id=channel.id) }}" class="btn-small btn-edit" style="background: #48bb78;">View Items</a>
+                    </td>
+                    {% else %}
+                    <td>
+                        <a href="{{ url_for('core.channel_items', channel_id=channel.id) }}" class="btn-small btn-edit" style="background: #48bb78;">View Items</a>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="no-data">
+        <h3>No channels found</h3>
+        <p>Create your first channel to get started.</p>
+        {% if session.is_admin %}
+        <a href="{{ url_for('core.create_channel') }}" class="btn-small btn-add" style="margin-top: 20px;">➕ Add Channel</a>
+        {% endif %}
+    </div>
+    {% endif %}
+{% endblock %}
+

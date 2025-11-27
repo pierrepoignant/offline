@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block page_title_text %}📑 Customer Types{% endblock %}
+
+{% block extra_styles %}
+    .header-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .data-table thead {
+        background: #667eea;
+        color: white;
+    }
+    
+    .data-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .data-table td {
+        padding: 15px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .data-table tbody tr:hover {
+        background: #f7fafc;
+    }
+    
+    .data-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .btn-small {
+        padding: 6px 12px;
+        font-size: 0.875rem;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: inline-block;
+        border: none;
+        cursor: pointer;
+    }
+    
+    .btn-edit {
+        background: #667eea;
+        color: white;
+    }
+    
+    .btn-edit:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+    }
+    
+    .btn-delete {
+        background: #e53e3e;
+        color: white;
+    }
+    
+    .btn-delete:hover {
+        background: #c53030;
+        transform: translateY(-1px);
+    }
+    
+    .btn-add {
+        background: #48bb78;
+        color: white;
+    }
+    
+    .btn-add:hover {
+        background: #38a169;
+        transform: translateY(-1px);
+    }
+    
+    .no-data {
+        text-align: center;
+        padding: 60px 20px;
+        color: #718096;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="header-actions">
+        <h2 style="margin: 0; color: #2d3748;">All Customer Types</h2>
+        {% if session.is_admin %}
+        <a href="{{ url_for('core.create_customer_type') }}" class="btn-small btn-add">➕ Add Customer Type</a>
+        {% endif %}
+    </div>
+    
+    {% if customer_types %}
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Name</th>
+                    <th>Color</th>
+                    {% if session.is_admin %}
+                    <th>Actions</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for customer_type in customer_types %}
+                <tr>
+                    <td><strong>{{ customer_type.name }}</strong></td>
+                    <td>
+                        {% if customer_type.color %}
+                            <span style="display: inline-block; width: 30px; height: 30px; border-radius: 4px; background-color: {{ customer_type.color }}; border: 2px solid #e2e8f0;" title="{{ customer_type.color }}"></span>
+                            <span style="margin-left: 10px; color: #4a5568; font-family: monospace;">{{ customer_type.color }}</span>
+                        {% else %}
+                            <span style="color: #a0aec0;">-</span>
+                        {% endif %}
+                    </td>
+                    {% if session.is_admin %}
+                    <td>
+                        <a href="{{ url_for('core.edit_customer_type', customer_type_id=customer_type.id) }}" class="btn-small btn-edit">Edit</a>
+                        <form method="POST" action="{{ url_for('core.delete_customer_type', customer_type_id=customer_type.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete customer type {{ customer_type.name }}?');">
+                            <button type="submit" class="btn-small btn-delete">Delete</button>
+                        </form>
+                    </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="no-data">
+        <h3>No customer types found</h3>
+        <p>Create your first customer type to get started.</p>
+        {% if session.is_admin %}
+        <a href="{{ url_for('core.create_customer_type') }}" class="btn-small btn-add" style="margin-top: 20px;">➕ Add Customer Type</a>
+        {% endif %}
+    </div>
+    {% endif %}
+{% endblock %}
+

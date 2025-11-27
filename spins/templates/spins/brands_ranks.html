@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+
+
+
+{% block page_title_text %}📊 SPINS Brands Rankings{% endblock %}
+
+{% block extra_styles %}
+    .header-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .filter-section {
+        background: #f7fafc;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 25px;
+    }
+    
+    .filter-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        align-items: end;
+    }
+    
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .filter-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #4a5568;
+        font-size: 0.875rem;
+    }
+    
+    .filter-group select,
+    .filter-group input {
+        width: 100%;
+        padding: 10px 15px;
+        font-size: 14px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        background: white;
+    }
+    
+    .filter-group select:focus,
+    .filter-group input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .filter-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 14px;
+    }
+    
+    .btn-primary {
+        background: #667eea;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+    }
+    
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .data-table thead {
+        background: #667eea;
+        color: white;
+    }
+    
+    .data-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .data-table td {
+        padding: 15px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .data-table tbody tr:hover {
+        background: #f7fafc;
+    }
+    
+    .data-table tbody tr.boka-brand {
+        background: #c6f6d5 !important;
+    }
+    
+    .data-table tbody tr.boka-brand:hover {
+        background: #9ae6b4 !important;
+    }
+    
+    .data-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .rank-badge {
+        display: inline-block;
+        width: 35px;
+        height: 35px;
+        line-height: 35px;
+        text-align: center;
+        border-radius: 50%;
+        font-weight: 700;
+        font-size: 0.875rem;
+    }
+    
+    .rank-1 {
+        background: #ffd700;
+        color: #2d3748;
+    }
+    
+    .rank-2 {
+        background: #c0c0c0;
+        color: #2d3748;
+    }
+    
+    .rank-3 {
+        background: #cd7f32;
+        color: white;
+    }
+    
+    .rank-other {
+        background: #e2e8f0;
+        color: #4a5568;
+    }
+    
+    .metric-highlight {
+        font-weight: 700;
+        color: #667eea;
+        font-size: 1.1em;
+    }
+    
+    .no-data {
+        text-align: center;
+        padding: 60px 20px;
+        color: #718096;
+    }
+    
+    .info-box {
+        background: #edf2f7;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        border-left: 4px solid #667eea;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="header-actions">
+        <h2 style="margin: 0; color: #2d3748;">SPINS Brands Rankings</h2>
+    </div>
+    
+    <div class="filter-section">
+        <form method="GET" action="{{ url_for('spins.brands_ranks') }}">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="week">Week *</label>
+                    <select id="week" name="week" required>
+                        <option value="">Select a week</option>
+                        {% for week in available_weeks %}
+                        <option value="{{ week.strftime('%Y-%m-%d') }}" {% if selected_week and selected_week == week %}selected{% endif %}>
+                            {{ week.strftime('%B %d, %Y') }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="channel_id">Channel *</label>
+                    <select id="channel_id" name="channel_id" required>
+                        <option value="">Select a channel</option>
+                        {% for channel in channels %}
+                        <option value="{{ channel.id }}" {% if selected_channel_id == channel.id %}selected{% endif %}>{{ channel.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="metric">Rank By</label>
+                    <select id="metric" name="metric">
+                        <option value="revenues" {% if selected_metric == 'revenues' %}selected{% endif %}>Revenues</option>
+                        <option value="units" {% if selected_metric == 'units' %}selected{% endif %}>Units</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="filter-actions">
+                <button type="submit" class="btn btn-primary">📊 Show Rankings</button>
+            </div>
+        </form>
+    </div>
+    
+    {% if selected_week and selected_channel %}
+    <div class="info-box">
+        <strong>Week:</strong> {{ selected_week.strftime('%B %d, %Y') }} | 
+        <strong>Channel:</strong> {{ selected_channel.name }} | 
+        <strong>Ranked by:</strong> {{ 'Units' if selected_metric == 'units' else 'Revenues ($)' }}
+    </div>
+    {% endif %}
+    
+    {% if ranks %}
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th style="width: 80px;">Rank</th>
+                    <th>Brand Name</th>
+                    <th style="text-align: right;">Units</th>
+                    <th style="text-align: right;">Revenues ($)</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for brand in ranks %}
+                <tr {% if brand.name and brand.name.upper() == 'BOKA' %}class="boka-brand"{% endif %}>
+                    <td>
+                        {% if brand.rank == 1 %}
+                            <span class="rank-badge rank-1">🥇</span>
+                        {% elif brand.rank == 2 %}
+                            <span class="rank-badge rank-2">🥈</span>
+                        {% elif brand.rank == 3 %}
+                            <span class="rank-badge rank-3">🥉</span>
+                        {% else %}
+                            <span class="rank-badge rank-other">{{ brand.rank }}</span>
+                        {% endif %}
+                    </td>
+                    <td><strong>{{ brand.name }}</strong></td>
+                    <td style="text-align: right;">
+                        {% if selected_metric == 'units' %}
+                            <span class="metric-highlight">{{ "{:,.0f}".format(brand.units) }}</span>
+                        {% else %}
+                            {{ "{:,.0f}".format(brand.units) }}
+                        {% endif %}
+                    </td>
+                    <td style="text-align: right;">
+                        {% if selected_metric == 'revenues' %}
+                            <span class="metric-highlight">${{ "{:,.2f}".format(brand.revenues) }}</span>
+                        {% else %}
+                            ${{ "{:,.2f}".format(brand.revenues) }}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% elif selected_week and selected_channel_id %}
+    <div class="no-data">
+        <h3>No data found</h3>
+        <p>No brands found for the selected week and channel.</p>
+    </div>
+    {% else %}
+    <div class="no-data">
+        <h3>Select filters to view rankings</h3>
+        <p>Please select a week and channel to see brand rankings.</p>
+    </div>
+    {% endif %}
+{% endblock %}
+

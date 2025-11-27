@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+
+
+
+{% block page_title_text %}{% if location %}Edit Customer{% else %}Add Customer{% endif %}{% endblock %}
+
+{% block extra_styles %}
+    .form-container {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        max-width: 600px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #4a5568;
+    }
+    
+    .form-group input[type="text"],
+    .form-group textarea,
+    .form-group select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color 0.2s;
+        font-family: inherit;
+    }
+    
+    .form-group textarea {
+        resize: vertical;
+        min-height: 100px;
+    }
+    
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 30px;
+    }
+    
+    .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-primary {
+        background: #667eea;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background: #e2e8f0;
+        color: #4a5568;
+    }
+    
+    .btn-secondary:hover {
+        background: #cbd5e0;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="form-container">
+        <form method="POST">
+            <div class="form-group">
+                <label for="name">Customer Name *</label>
+                <input type="text" id="name" name="name" value="{{ location.name if location else '' }}" required autofocus>
+            </div>
+            
+            <div class="form-group">
+                <label for="channel_id">Channel *</label>
+                <select id="channel_id" name="channel_id" required>
+                    <option value="">Select a channel</option>
+                    {% for channel in channels %}
+                    <option value="{{ channel.id }}" {% if location and location.channel_id == channel.id %}selected{% endif %}>{{ channel.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="brand_id">Brand</label>
+                <select id="brand_id" name="brand_id">
+                    <option value="">Select a brand (optional)</option>
+                    {% for brand in brands %}
+                    <option value="{{ brand.id }}" {% if location and location.brand_id == brand.id %}selected{% endif %}>{{ brand.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="customer_type_id">Customer Type</label>
+                <select id="customer_type_id" name="customer_type_id">
+                    <option value="">Select a customer type (optional)</option>
+                    {% for customer_type in customer_types %}
+                    <option value="{{ customer_type.id }}" {% if location and location.customer_type_id == customer_type.id %}selected{% endif %}>{{ customer_type.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" placeholder="Optional description">{{ location.description if location and location.description else '' }}</textarea>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">{% if location %}Update Customer{% else %}Create Customer{% endif %}</button>
+                <a href="{{ url_for('core.customers_list') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+

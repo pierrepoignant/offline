@@ -1,0 +1,231 @@
+{% extends "base.html" %}
+
+{% block page_title_text %}Import Netsuite Data from Snowflake{% endblock %}
+
+{% block extra_styles %}
+    .import-container {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        max-width: 800px;
+    }
+    
+    .instructions {
+        background: #f7fafc;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        border-left: 4px solid #667eea;
+    }
+    
+    .instructions h3 {
+        margin: 0 0 15px 0;
+        color: #2d3748;
+        font-size: 1.125rem;
+    }
+    
+    .instructions ul {
+        margin: 0;
+        padding-left: 20px;
+        color: #4a5568;
+    }
+    
+    .instructions li {
+        margin-bottom: 8px;
+    }
+    
+    .instructions code {
+        background: #e2e8f0;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 0.875rem;
+    }
+    
+    .btn-submit {
+        padding: 12px 24px;
+        background: #48bb78;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 16px;
+    }
+    
+    .btn-submit:hover {
+        background: #38a169;
+        transform: translateY(-1px);
+    }
+    
+    .btn-submit:disabled {
+        background: #cbd5e0;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .results-section {
+        margin-top: 30px;
+        padding: 20px;
+        background: #f7fafc;
+        border-radius: 8px;
+    }
+    
+    .results-section h3 {
+        margin: 0 0 15px 0;
+        color: #2d3748;
+    }
+    
+    .results-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .stat-box {
+        background: white;
+        padding: 15px;
+        border-radius: 6px;
+        text-align: center;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+    
+    .stat-box .value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #667eea;
+        margin-bottom: 5px;
+    }
+    
+    .stat-box .label {
+        font-size: 0.875rem;
+        color: #718096;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .errors-list {
+        max-height: 300px;
+        overflow-y: auto;
+        background: white;
+        padding: 15px;
+        border-radius: 6px;
+        border: 1px solid #fed7d7;
+    }
+    
+    .errors-list ul {
+        margin: 0;
+        padding-left: 20px;
+        color: #c53030;
+    }
+    
+    .errors-list li {
+        margin-bottom: 5px;
+        font-size: 0.875rem;
+    }
+    
+    .snowflake-info {
+        background: #e6fffa;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        border-left: 4px solid #38b2ac;
+    }
+    
+    .snowflake-info p {
+        margin: 0;
+        color: #234e52;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="import-container">
+        <div class="instructions">
+            <h3>📋 Snowflake Import Instructions</h3>
+            <ul>
+                <li>Select the table to import from (2024 or 2025 data)</li>
+                <li>Choose import method: Import All or Import since the last entry</li>
+                <li>The query filters for Revenue accounts</li>
+                <li>Netsuite codes will be created automatically if they don't exist</li>
+                <li>Items must exist in the system (matched by <code>essor_code</code>)</li>
+                <li>Existing records (same date, channel, item) will be skipped</li>
+            </ul>
+        </div>
+        
+        <div class="snowflake-info">
+            <p><strong>ℹ️ Note:</strong> This will connect to Snowflake using the configured credentials and import revenue data.</p>
+        </div>
+        
+        <form method="POST" id="importForm">
+            <div style="margin-bottom: 20px;">
+                <label for="table_name" style="display: block; margin-bottom: 8px; font-weight: 600; color: #4a5568;">
+                    📊 Select Table:
+                </label>
+                <select name="table_name" id="table_name" required style="width: 100%; padding: 10px 15px; font-size: 14px; border: 2px solid #e2e8f0; border-radius: 6px; background: white;">
+                    <option value="NET_REVENUE_OFFLINE_CHANNELS" {% if not table_name or table_name == 'NET_REVENUE_OFFLINE_CHANNELS' %}selected{% endif %}>NET_REVENUE_OFFLINE_CHANNELS (2025 data)</option>
+                    <option value="NET_REVENUE_OFFLINE_CHANNELS_2024" {% if table_name == 'NET_REVENUE_OFFLINE_CHANNELS_2024' %}selected{% endif %}>NET_REVENUE_OFFLINE_CHANNELS_2024 (2024 data)</option>
+                </select>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <label for="import_method" style="display: block; margin-bottom: 8px; font-weight: 600; color: #4a5568;">
+                    🔄 Import Method:
+                </label>
+                <select name="import_method" id="import_method" required style="width: 100%; padding: 10px 15px; font-size: 14px; border: 2px solid #e2e8f0; border-radius: 6px; background: white;">
+                    <option value="all" {% if import_method == 'all' %}selected{% endif %}>Import All</option>
+                    <option value="incremental" {% if not import_method or import_method == 'incremental' %}selected{% endif %}>Import since the last entry</option>
+                </select>
+            </div>
+            
+            <div style="display: flex; gap: 10px;">
+                <button type="submit" name="dry_run" value="false" class="btn-submit" id="submitBtn">📥 Import Data</button>
+                <button type="submit" name="dry_run" value="true" class="btn-submit" id="dryRunBtn" style="background: #ed8936;">🧪 Dry Run (First 10 Rows)</button>
+            </div>
+        </form>
+        
+        {% if results %}
+        <div class="results-section">
+            <h3>{% if dry_run %}🧪 Dry Run Results{% else %}Import Results{% endif %}</h3>
+            {% if dry_run %}
+            <div style="background: #feebc8; padding: 15px; border-radius: 6px; margin-bottom: 20px; border-left: 4px solid #ed8936;">
+                <strong>⚠ Dry Run Mode:</strong> This was a test run with the first 10 rows. No data was saved to the database.
+            </div>
+            {% endif %}
+            <div class="results-stats">
+                <div class="stat-box">
+                    <div class="value">{{ results.processed }}</div>
+                    <div class="label">Processed</div>
+                </div>
+                <div class="stat-box">
+                    <div class="value">{{ results.created }}</div>
+                    <div class="label">Created</div>
+                </div>
+                <div class="stat-box">
+                    <div class="value">{{ results.updated }}</div>
+                    <div class="label">Updated</div>
+                </div>
+                <div class="stat-box">
+                    <div class="value">{{ results.skipped }}</div>
+                    <div class="label">Skipped</div>
+                </div>
+            </div>
+            
+            {% if results.errors %}
+            <div>
+                <h4 style="color: #c53030; margin-bottom: 10px;">Errors ({{ results.errors|length }})</h4>
+                <div class="errors-list">
+                    <ul>
+                        {% for error in results.errors %}
+                        <li>{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+{% endblock %}
+

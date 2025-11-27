@@ -1,0 +1,554 @@
+{% extends "base.html" %}
+
+
+
+{% block page_title_text %}📊 SPINS Dashboard{% endblock %}
+
+{% block extra_styles %}
+    .dashboard-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .filter-section {
+        background: #f7fafc;
+        padding: 25px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .filter-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        align-items: end;
+    }
+    
+    .filter-row:nth-child(2) {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    @media (max-width: 1200px) {
+        .filter-row {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        .filter-row:nth-child(2) {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .filter-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .filter-row:nth-child(2) {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .filter-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #4a5568;
+        font-size: 0.875rem;
+    }
+    
+    .filter-group select,
+    .filter-group input {
+        width: 100%;
+        padding: 10px 15px;
+        font-size: 14px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        background: white;
+        transition: border-color 0.2s;
+    }
+    
+    .filter-group select:focus,
+    .filter-group input:focus {
+        outline: none;
+        border-color: #9f7aea;
+    }
+    
+    .filter-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    
+    .btn-filter {
+        background: #9f7aea;
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 14px;
+    }
+    
+    .btn-filter:hover {
+        background: #805ad5;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(159, 122, 234, 0.3);
+    }
+    
+    .chart-container {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        position: relative;
+        height: 500px;
+    }
+    
+    .chart-loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 500px;
+        color: #718096;
+        font-size: 16px;
+    }
+    
+    .chart-error {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 500px;
+        color: #e53e3e;
+        font-size: 16px;
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .custom-date-input {
+        display: none;
+    }
+    
+    .custom-date-input.show {
+        display: flex;
+    }
+    
+    /* Custom dropdown with checkboxes */
+    .custom-dropdown {
+        position: relative;
+        width: 100%;
+    }
+    
+    .custom-dropdown-toggle {
+        width: 100%;
+        padding: 10px 15px;
+        font-size: 14px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        background: white;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: border-color 0.2s;
+    }
+    
+    .custom-dropdown-toggle:hover {
+        border-color: #9f7aea;
+    }
+    
+    .custom-dropdown-toggle:focus {
+        outline: none;
+        border-color: #9f7aea;
+    }
+    
+    .custom-dropdown-toggle::after {
+        content: '▼';
+        font-size: 10px;
+        color: #718096;
+        transition: transform 0.2s;
+    }
+    
+    .custom-dropdown-toggle.open::after {
+        transform: rotate(180deg);
+    }
+    
+    .custom-dropdown-menu {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: white;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        margin-top: 4px;
+        max-height: 300px;
+        overflow-y: auto;
+        z-index: 1000;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .custom-dropdown-menu.show {
+        display: block;
+    }
+    
+    .custom-dropdown-item {
+        padding: 10px 15px;
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    
+    .custom-dropdown-item:hover {
+        background-color: #f7fafc;
+    }
+    
+    .custom-dropdown-item input[type="checkbox"] {
+        margin-right: 10px;
+        cursor: pointer;
+        width: 18px;
+        height: 18px;
+    }
+    
+    .custom-dropdown-item label {
+        cursor: pointer;
+        margin: 0;
+        flex: 1;
+        font-weight: normal;
+    }
+    
+    .selected-count {
+        color: #718096;
+        font-size: 0.75rem;
+        margin-left: 8px;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="dashboard-container">
+        <div class="filter-section">
+            <form id="dashboardForm">
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <label for="time_period">Time Period</label>
+                        <select id="time_period" name="time_period">
+                            <option value="last_12_weeks" selected>Last 12 Weeks</option>
+                            <option value="last_4_weeks">Last 4 Weeks</option>
+                            <option value="year_to_date">Year to Date</option>
+                            <option value="custom">Custom</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="metric">Metric</label>
+                        <select id="metric" name="metric">
+                            <option value="revenues" selected>Revenues</option>
+                            <option value="units">Units</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="brand_dropdown">Brand</label>
+                        <div class="custom-dropdown">
+                            <div class="custom-dropdown-toggle" id="brandDropdownToggle">
+                                <span>Select brands <span class="selected-count" id="selectedBrandCount"></span></span>
+                            </div>
+                            <div class="custom-dropdown-menu" id="brandDropdownMenu">
+                                {% for brand in brands %}
+                                <div class="custom-dropdown-item">
+                                    <input type="checkbox" id="brand_{{ brand.id }}" value="{{ brand.id }}" name="brand_id">
+                                    <label for="brand_{{ brand.id }}">{{ brand.name }}</label>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="channel_id">Channel</label>
+                        <select id="channel_id" name="channel_id">
+                            <option value="">All Channels</option>
+                            {% for channel in channels %}
+                            <option value="{{ channel.id }}">{{ channel.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="filter-row">
+                    <div class="filter-group custom-date-input" id="customDateRow">
+                        <label for="date_from">Week From</label>
+                        <input type="date" id="date_from" name="date_from">
+                    </div>
+                    
+                    <div class="filter-group custom-date-input" id="customDateRow2">
+                        <label for="date_to">Week To</label>
+                        <input type="date" id="date_to" name="date_to">
+                    </div>
+                </div>
+                
+                <div class="filter-actions">
+                    <button type="submit" class="btn-filter">📊 Update Chart</button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="spinsChart"></canvas>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        let chart = null;
+        
+        // Initialize chart
+        const ctx = document.getElementById('spinsChart').getContext('2d');
+        
+        // Show/hide custom date inputs
+        document.getElementById('time_period').addEventListener('change', function() {
+            const isCustom = this.value === 'custom';
+            const dateFromRow = document.getElementById('customDateRow');
+            const dateToRow = document.getElementById('customDateRow2');
+            if (isCustom) {
+                dateFromRow.classList.add('show');
+                dateToRow.classList.add('show');
+            } else {
+                dateFromRow.classList.remove('show');
+                dateToRow.classList.remove('show');
+            }
+        });
+        
+        // Custom dropdown with checkboxes
+        const brandDropdownToggle = document.getElementById('brandDropdownToggle');
+        const brandDropdownMenu = document.getElementById('brandDropdownMenu');
+        const brandCheckboxes = document.querySelectorAll('input[name="brand_id"]');
+        const selectedBrandCount = document.getElementById('selectedBrandCount');
+        
+        function updateSelectedCount() {
+            const selected = Array.from(brandCheckboxes).filter(cb => cb.checked);
+            const count = selected.length;
+            if (count > 0) {
+                selectedBrandCount.textContent = `(${count} selected)`;
+                const selectedNames = selected.map(cb => {
+                    const label = document.querySelector(`label[for="${cb.id}"]`);
+                    return label ? label.textContent : '';
+                }).filter(name => name);
+                brandDropdownToggle.querySelector('span').textContent = selectedNames.length <= 3 
+                    ? selectedNames.join(', ') 
+                    : `${selectedNames.slice(0, 3).join(', ')} +${count - 3} more`;
+            } else {
+                selectedBrandCount.textContent = '';
+                brandDropdownToggle.querySelector('span').textContent = 'Select brands';
+            }
+        }
+        
+        // Toggle dropdown
+        brandDropdownToggle.addEventListener('click', function(e) {
+            e.stopPropagation();
+            brandDropdownMenu.classList.toggle('show');
+            brandDropdownToggle.classList.toggle('open');
+        });
+        
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!brandDropdownToggle.contains(e.target) && !brandDropdownMenu.contains(e.target)) {
+                brandDropdownMenu.classList.remove('show');
+                brandDropdownToggle.classList.remove('open');
+            }
+        });
+        
+        // Update count when checkboxes change
+        brandCheckboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', updateSelectedCount);
+        });
+        
+        // Initialize count
+        updateSelectedCount();
+        
+        // Load chart data
+        function loadChartData() {
+            const form = document.getElementById('dashboardForm');
+            const formData = new FormData(form);
+            
+            // Build query string - handle multiple brand selections
+            const params = new URLSearchParams();
+            for (const [key, value] of formData.entries()) {
+                if (key === 'brand_id') {
+                    // Handle multiple brand selections from checkboxes
+                    const selectedBrands = Array.from(brandCheckboxes)
+                        .filter(cb => cb.checked)
+                        .map(cb => cb.value);
+                    selectedBrands.forEach(brandId => {
+                        if (brandId) {
+                            params.append('brand_id', brandId);
+                        }
+                    });
+                } else if (value) {
+                    params.append(key, value);
+                }
+            }
+            
+            // Show loading state
+            const chartContainer = document.querySelector('.chart-container');
+            chartContainer.innerHTML = '<div class="chart-loading">Loading chart data...</div>';
+            
+            // Fetch data
+            fetch(`{{ url_for('spins.api_chart_data') }}?${params.toString()}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        chartContainer.innerHTML = `<div class="chart-error">Error: ${data.error}</div>`;
+                        return;
+                    }
+                    
+                    // Restore canvas
+                    chartContainer.innerHTML = '<canvas id="spinsChart"></canvas>';
+                    const ctx = document.getElementById('spinsChart').getContext('2d');
+                    
+                    // Update or create chart
+                    if (chart) {
+                        chart.destroy();
+                    }
+                    
+                    // Prepare datasets
+                    let datasets = [];
+                    if (data.brands_data && data.brands_data.length > 0) {
+                        // Multiple brands - one dataset per brand
+                        datasets = data.brands_data.map(brand => ({
+                            label: brand.brand_name,
+                            data: brand.values,
+                            borderColor: brand.color,
+                            backgroundColor: brand.color.replace('rgb', 'rgba').replace(')', ', 0.1)'),
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: data.dates.length > 100 ? 0 : 3,
+                            pointHoverRadius: 5
+                        }));
+                    } else {
+                        // Single dataset (no brands selected or aggregated)
+                        datasets = [{
+                            label: data.metric_label,
+                            data: data.values,
+                            borderColor: 'rgb(159, 122, 234)',
+                            backgroundColor: 'rgba(159, 122, 234, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: data.dates.length > 100 ? 0 : 3,
+                            pointHoverRadius: 5
+                        }];
+                    }
+                    
+                    chart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.dates,
+                            datasets: datasets
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: `SPINS ${data.metric_label} (${data.start_date} to ${data.end_date})`,
+                                    font: {
+                                        size: 18,
+                                        weight: 'bold'
+                                    },
+                                    padding: {
+                                        bottom: 20
+                                    }
+                                },
+                                legend: {
+                                    display: true,
+                                    position: 'top'
+                                },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                    callbacks: {
+                                        label: function(context) {
+                                            const value = context.parsed.y;
+                                            if (data.metric_label.includes('Revenues')) {
+                                                return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                                            } else {
+                                                return value.toLocaleString();
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            if (data.metric_label.includes('Revenues')) {
+                                                if (value >= 1000000) {
+                                                    return '$' + (value / 1000000).toFixed(1) + 'M';
+                                                } else if (value >= 1000) {
+                                                    return '$' + (value / 1000).toFixed(1) + 'K';
+                                                }
+                                                return '$' + value.toLocaleString();
+                                            } else {
+                                                if (value >= 1000000) {
+                                                    return (value / 1000000).toFixed(1) + 'M';
+                                                } else if (value >= 1000) {
+                                                    return (value / 1000).toFixed(1) + 'K';
+                                                }
+                                                return value.toLocaleString();
+                                            }
+                                        }
+                                    }
+                                },
+                                x: {
+                                    ticks: {
+                                        maxTicksLimit: 12,
+                                        callback: function(value, index) {
+                                            const labels = data.dates;
+                                            if (labels && labels.length > 20) {
+                                                const step = Math.ceil(labels.length / 12);
+                                                return index % step === 0 ? labels[index] : '';
+                                            }
+                                            return labels && labels[index] ? labels[index] : '';
+                                        }
+                                    }
+                                }
+                            },
+                            interaction: {
+                                mode: 'nearest',
+                                axis: 'x',
+                                intersect: false
+                            }
+                        }
+                    });
+                })
+                .catch(error => {
+                    chartContainer.innerHTML = `<div class="chart-error">Error loading data: ${error.message}</div>`;
+                    console.error('Error:', error);
+                });
+        }
+        
+        // Handle form submission
+        document.getElementById('dashboardForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            loadChartData();
+        });
+        
+        // Load initial data
+        loadChartData();
+    </script>
+{% endblock %}
+

@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+
+
+{% block page_title_text %}{% if retailer_code %}Edit Retailer Code{% else %}Add Retailer Code{% endif %}{% endblock %}
+
+{% block extra_styles %}
+    .form-container {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        max-width: 600px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #4a5568;
+    }
+    
+    .form-group input[type="text"],
+    .form-group select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 30px;
+    }
+    
+    .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-primary {
+        background: #667eea;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background: #e2e8f0;
+        color: #4a5568;
+    }
+    
+    .btn-secondary:hover {
+        background: #cbd5e0;
+    }
+    
+    .info-box {
+        background: #e6fffa;
+        padding: 15px;
+        border-radius: 6px;
+        margin-bottom: 20px;
+        border-left: 4px solid #38b2ac;
+    }
+    
+    .info-box p {
+        margin: 0;
+        color: #234e52;
+        font-size: 0.875rem;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="info-box">
+        <p><strong>ℹ️ Note:</strong> When you save this mapping, all existing Netsuite records with this retailer code will be automatically updated to use the selected channel.</p>
+    </div>
+    
+    <div class="form-container">
+        <form method="POST">
+            <div class="form-group">
+                <label for="retailer_code">Retailer Code *</label>
+                <input type="text" id="retailer_code" name="retailer_code" 
+                       value="{{ retailer_code.retailer_code if retailer_code else '' }}" 
+                       required autofocus maxlength="10" 
+                       style="text-transform: uppercase;">
+                <div style="font-size: 0.875rem; color: #718096; margin-top: 5px;">First 5 characters of retailer name from Netsuite</div>
+            </div>
+            
+            <div class="form-group">
+                <label for="channel_id">Channel *</label>
+                <select id="channel_id" name="channel_id" required>
+                    <option value="">Select a channel</option>
+                    {% for channel in channels %}
+                    <option value="{{ channel.id }}" {% if retailer_code and retailer_code.channel_id == channel.id %}selected{% endif %}>{{ channel.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">{% if retailer_code %}Update Mapping{% else %}Create Mapping{% endif %}</button>
+                <a href="{{ url_for('netsuite.retailer_codes_list') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+    
+    <script>
+        // Auto-uppercase retailer code input
+        document.getElementById('retailer_code').addEventListener('input', function(e) {
+            this.value = this.value.toUpperCase();
+        });
+    </script>
+{% endblock %}
+

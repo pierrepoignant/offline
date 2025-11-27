@@ -1,0 +1,397 @@
+{% extends "base.html" %}
+
+{% block page_title_text %}📦 Scraped Data - {{ item.name }}{% endblock %}
+
+{% block extra_styles %}
+    .product-header {
+        display: flex;
+        gap: 30px;
+        margin-bottom: 40px;
+        padding: 30px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        align-items: flex-start;
+    }
+    
+    .product-image {
+        flex-shrink: 0;
+        width: 200px;
+        height: 200px;
+        object-fit: contain;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        background: #f7fafc;
+        padding: 10px;
+    }
+    
+    .product-info {
+        flex: 1;
+    }
+    
+    .product-title {
+        font-size: 1.75rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin: 0 0 10px 0;
+    }
+    
+    .product-brand {
+        font-size: 1.125rem;
+        color: #667eea;
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+    
+    .product-upc {
+        color: #718096;
+        font-size: 0.875rem;
+    }
+    
+    .section {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .section-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin: 0 0 20px 0;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .tabs {
+        display: flex;
+        border-bottom: 2px solid #e2e8f0;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+    }
+    
+    .tab {
+        padding: 12px 24px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #718096;
+        border-bottom: 3px solid transparent;
+        transition: all 0.2s;
+        white-space: nowrap;
+    }
+    
+    .tab:hover {
+        color: #667eea;
+    }
+    
+    .tab.active {
+        color: #667eea;
+        border-bottom-color: #667eea;
+    }
+    
+    .tab-content {
+        display: none;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+    
+    .list-item {
+        padding: 15px;
+        margin-bottom: 10px;
+        background: #f7fafc;
+        border-radius: 6px;
+        border-left: 4px solid #667eea;
+    }
+    
+    .list-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .store-card {
+        display: flex;
+        gap: 20px;
+        padding: 20px;
+        background: #f7fafc;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border: 1px solid #e2e8f0;
+    }
+    
+    .store-card:last-child {
+        margin-bottom: 0;
+    }
+    
+    .store-image {
+        flex-shrink: 0;
+        width: 150px;
+        height: 150px;
+        object-fit: contain;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        background: white;
+        padding: 5px;
+    }
+    
+    .store-image-placeholder {
+        flex-shrink: 0;
+        width: 150px;
+        height: 150px;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        background: #f7fafc;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .store-info {
+        flex: 1;
+    }
+    
+    .store-name {
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: #2d3748;
+        margin: 0 0 15px 0;
+    }
+    
+    .store-link {
+        display: inline-block;
+        padding: 8px 16px;
+        background: #667eea;
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        transition: all 0.2s;
+    }
+    
+    .store-link:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+    }
+    
+    .price-info {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+    }
+    
+    .price-label {
+        font-size: 0.875rem;
+        color: #718096;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .price-value {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #2d3748;
+    }
+    
+    .price-sale {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #48bb78;
+    }
+    
+    .price-currency {
+        font-size: 0.875rem;
+        color: #718096;
+        margin-left: 5px;
+    }
+    
+    .back-button {
+        display: inline-block;
+        margin-bottom: 20px;
+        padding: 10px 20px;
+        background: #667eea;
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+    
+    .back-button:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+    }
+    
+    .no-image {
+        width: 200px;
+        height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f7fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        color: #cbd5e0;
+        font-size: 0.875rem;
+    }
+{% endblock %}
+
+{% block content %}
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <a href="{{ url_for('spins.items_list') }}" class="back-button">← Back to Items</a>
+        <form method="POST" action="{{ url_for('spins.scrape_item', item_id=item.id) }}" style="display: inline;">
+            <button type="submit" class="back-button" style="background: #ed8936;">⚡ Scrape Again</button>
+        </form>
+    </div>
+    
+    <div class="product-header">
+        <div>
+            {% if item.img_url %}
+            <img src="{{ item.img_url }}" alt="{{ item.scrapped_name or item.name }}" class="product-image" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="no-image" style="display: none;">No Image</div>
+            {% else %}
+            <div class="no-image">No Image</div>
+            {% endif %}
+        </div>
+        <div class="product-info">
+            <h1 class="product-title">{{ item.scrapped_name or item.name }}</h1>
+            {% if brand %}
+            <div class="product-brand">{{ brand.name }}</div>
+            {% endif %}
+            <div class="product-upc"><strong>UPC:</strong> {{ item.upc }}</div>
+        </div>
+    </div>
+    
+    <!-- Section 1: Properties -->
+    <div class="section">
+        <h2 class="section-title">Properties</h2>
+        
+        <div class="tabs">
+            {% if scraped_data.properties and scraped_data.properties.title %}
+            <button class="tab active" data-tab="titles">Titles</button>
+            {% endif %}
+            {% if scraped_data.properties and scraped_data.properties.description %}
+            <button class="tab{% if not (scraped_data.properties and scraped_data.properties.title) %} active{% endif %}" data-tab="descriptions">Descriptions</button>
+            {% endif %}
+            {% if scraped_data.properties and scraped_data.properties.features %}
+            <button class="tab{% if not (scraped_data.properties and scraped_data.properties.title) and not (scraped_data.properties and scraped_data.properties.description) %} active{% endif %}" data-tab="features">Features</button>
+            {% endif %}
+        </div>
+        
+        {% if scraped_data.properties and scraped_data.properties.title %}
+        <div id="titles" class="tab-content active">
+            {% for title in scraped_data.properties.title %}
+            <div class="list-item">
+                {{ title }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        {% if scraped_data.properties and scraped_data.properties.description %}
+        <div id="descriptions" class="tab-content{% if not (scraped_data.properties and scraped_data.properties.title) %} active{% endif %}">
+            {% for description in scraped_data.properties.description %}
+            <div class="list-item">
+                {{ description }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        
+        {% if scraped_data.properties and scraped_data.properties.features %}
+        <div id="features" class="tab-content{% if not (scraped_data.properties and scraped_data.properties.title) and not (scraped_data.properties and scraped_data.properties.description) %} active{% endif %}">
+            {% for feature in scraped_data.properties.features %}
+            <div class="list-item">
+                {{ feature }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+    
+    <!-- Section 2: Stores -->
+    {% if scraped_data.stores and scraped_data.stores|length > 0 %}
+    <div class="section">
+        <h2 class="section-title">Stores</h2>
+        
+        {% for store in scraped_data.stores %}
+        <div class="store-card">
+            {% if store.image %}
+            <img src="{{ store.image }}" alt="{{ store.store or 'Store' }}" class="store-image" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="store-image-placeholder" style="display: none;"></div>
+            {% else %}
+            <div class="store-image-placeholder"></div>
+            {% endif %}
+            <div class="store-info">
+                <h3 class="store-name">{{ store.store or 'Unknown Store' }}</h3>
+                {% if store.url %}
+                <a href="{{ store.url }}" target="_blank" rel="noopener noreferrer" class="store-link">🔗 Visit Store</a>
+                {% endif %}
+                {% if store.price %}
+                <div class="price-info">
+                    {% if store.price.sale %}
+                    <div>
+                        <div class="price-label">Sale Price</div>
+                        <div class="price-value price-sale">
+                            {{ store.price.sale }}
+                            {% if store.price.currency %}<span class="price-currency">{{ store.price.currency }}</span>{% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if store.price.price %}
+                    <div>
+                        <div class="price-label">{% if store.price.sale %}Original Price{% else %}Price{% endif %}</div>
+                        <div class="price-value">
+                            {{ store.price.price }}
+                            {% if store.price.currency %}<span class="price-currency">{{ store.price.currency }}</span>{% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                    {% if store.price.list %}
+                    <div>
+                        <div class="price-label">List Price</div>
+                        <div class="price-value">
+                            {{ store.price.list }}
+                            {% if store.price.currency %}<span class="price-currency">{{ store.price.currency }}</span>{% endif %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            const tabName = this.getAttribute('data-tab');
+            const section = this.closest('.section');
+            
+            // Update tab buttons in this section
+            section.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            
+            // Update tab content in this section
+            section.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            const targetContent = section.querySelector('#' + tabName);
+            if (targetContent) {
+                targetContent.classList.add('active');
+            }
+        });
+    });
+</script>
+{% endblock %}
+

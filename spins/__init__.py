@@ -1,0 +1,2 @@
+# SPINS blueprint package
+

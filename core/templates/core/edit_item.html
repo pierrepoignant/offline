@@ -1,0 +1,254 @@
+{% extends "base.html" %}
+
+
+
+{% block page_title_text %}{% if item %}Edit Item{% else %}Add Item{% endif %}{% endblock %}
+
+{% block extra_styles %}
+    .edit-container {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+        align-items: start;
+    }
+    
+    @media (max-width: 1000px) {
+        .edit-container {
+            grid-template-columns: 1fr;
+        }
+    }
+    
+    .form-container {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .channels-reference {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        position: sticky;
+        top: 20px;
+    }
+    
+    .channels-reference h3 {
+        margin: 0 0 20px 0;
+        color: #2d3748;
+        font-size: 1.25rem;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .channels-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+    }
+    
+    .channels-table th {
+        background: #667eea;
+        color: white;
+        padding: 10px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .channels-table td {
+        padding: 10px;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 0.875rem;
+    }
+    
+    .channels-table tbody tr:hover {
+        background: #f7fafc;
+    }
+    
+    .no-channels-ref {
+        color: #718096;
+        font-style: italic;
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #4a5568;
+    }
+    
+    .form-group input[type="text"],
+    .form-group select {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+    
+    .form-group input:focus,
+    .form-group select:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 30px;
+    }
+    
+    .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-primary {
+        background: #667eea;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background: #e2e8f0;
+        color: #4a5568;
+    }
+    
+    .btn-secondary:hover {
+        background: #cbd5e0;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="edit-container">
+        <div class="form-container">
+            <form method="POST">
+                <div class="form-group">
+                    <label for="essor_code">Essor Code *</label>
+                    <input type="text" id="essor_code" name="essor_code" value="{{ item.essor_code if item else '' }}" required autofocus>
+                </div>
+                
+                <div class="form-group">
+                    <label for="essor_name">Essor Name *</label>
+                    <input type="text" id="essor_name" name="essor_name" value="{{ item.essor_name if item else '' }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="brand_id">Brand *</label>
+                    <select id="brand_id" name="brand_id" required>
+                        <option value="">Select a brand</option>
+                        {% for brand in brands %}
+                        <option value="{{ brand.id }}" {% if item and item.brand_id == brand.id %}selected{% endif %}>{{ brand.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+            <div class="form-group">
+                <label for="category_id">Category</label>
+                <select id="category_id" name="category_id">
+                    <option value="">None</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" data-brand-id="{{ category.brand_id }}" {% if item and item.category_id == category.id %}selected{% endif %}>{{ category.brand.name }} - {{ category.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary">{% if item %}Update Item{% else %}Create Item{% endif %}</button>
+                    <a href="{{ url_for('core.items_list') }}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+        
+        {% if item and channel_items %}
+        <div class="channels-reference">
+            <h3>📋 Channel Codes & Names</h3>
+            <table class="channels-table">
+                <thead>
+                    <tr>
+                        <th>Channel</th>
+                        <th>Code</th>
+                        <th>Name</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ci in channel_items %}
+                    <tr>
+                        <td><strong>{{ ci.channel.name }}</strong></td>
+                        <td>{{ ci.channel_code }}</td>
+                        <td>{{ ci.channel_name }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% elif item %}
+        <div class="channels-reference">
+            <h3>📋 Channel Codes & Names</h3>
+            <div class="no-channels-ref">No channels found for this item.</div>
+        </div>
+        {% endif %}
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        // Filter categories based on selected brand
+        document.getElementById('brand_id').addEventListener('change', function() {
+            const brandId = this.value;
+            const categorySelect = document.getElementById('category_id');
+            const categoryOptions = categorySelect.querySelectorAll('option');
+            
+            // Store current selection
+            const currentSelection = categorySelect.value;
+            
+            categoryOptions.forEach(option => {
+                if (option.value === '') {
+                    // Always show "None" option
+                    option.style.display = '';
+                } else {
+                    const optionBrandId = option.getAttribute('data-brand-id');
+                    option.style.display = (brandId === '' || optionBrandId === brandId) ? '' : 'none';
+                }
+            });
+            
+            // Reset selection if current category doesn't match selected brand
+            if (brandId !== '' && currentSelection !== '') {
+                const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+                if (selectedOption.style.display === 'none') {
+                    categorySelect.value = '';
+                }
+            }
+        });
+        
+        // Trigger on page load to filter based on existing brand selection
+        document.addEventListener('DOMContentLoaded', function() {
+            const brandSelect = document.getElementById('brand_id');
+            if (brandSelect.value) {
+                brandSelect.dispatchEvent(new Event('change'));
+            }
+        });
+    </script>
+{% endblock %}
+

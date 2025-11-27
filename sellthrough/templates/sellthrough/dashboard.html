@@ -1,0 +1,561 @@
+{% extends "base.html" %}
+
+
+
+{% block page_title_text %}📈 Sellthrough Dashboard{% endblock %}
+
+{% block extra_styles %}
+    .dashboard-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .filter-section {
+        background: #f7fafc;
+        padding: 25px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .filter-rows {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .filter-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        align-items: end;
+    }
+    
+    @media (max-width: 1200px) {
+        .filter-row {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .filter-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .filter-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #4a5568;
+        font-size: 0.875rem;
+    }
+    
+    .filter-group select,
+    .filter-group input {
+        width: 100%;
+        padding: 10px 15px;
+        font-size: 14px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        background: white;
+        transition: border-color 0.2s;
+    }
+    
+    .filter-group select:focus,
+    .filter-group input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .filter-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    
+    .btn-filter {
+        background: #667eea;
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 14px;
+    }
+    
+    .btn-filter:hover {
+        background: #5568d3;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+    }
+    
+    .chart-container {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        position: relative;
+        height: 500px;
+    }
+    
+    .chart-loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 500px;
+        color: #718096;
+        font-size: 16px;
+    }
+    
+    .chart-error {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 500px;
+        color: #e53e3e;
+        font-size: 16px;
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .custom-date-input {
+        display: none;
+    }
+    
+    .custom-date-input.show {
+        display: flex;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="dashboard-container">
+        <div class="filter-section">
+            <form id="dashboardForm">
+                <div class="filter-rows">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="time_period">Time Period</label>
+                            <select id="time_period" name="time_period">
+                                <option value="last_12_months">Last 12 Months</option>
+                                <option value="last_3_months">Last 3 Months</option>
+                                <option value="year_to_date">Year to Date</option>
+                                <option value="custom">Custom</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="metric">Metric</label>
+                            <select id="metric" name="metric">
+                                <option value="revenues" selected>Revenues</option>
+                                <option value="units">Units</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="brand_id">Brand</label>
+                            <select id="brand_id" name="brand_id">
+                                <option value="">All Brands</option>
+                                {% for brand in brands %}
+                                <option value="{{ brand.id }}">{{ brand.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="channel_id">Channel</label>
+                            <select id="channel_id" name="channel_id">
+                                <option value="">All Channels</option>
+                                {% for channel in channels %}
+                                <option value="{{ channel.id }}">{{ channel.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="filter-row">
+                        <div class="filter-group custom-date-input" id="customDateRow">
+                            <label for="date_from">Date From</label>
+                            <input type="date" id="date_from" name="date_from">
+                        </div>
+                        
+                        <div class="filter-group custom-date-input" id="customDateRow2">
+                            <label for="date_to">Date To</label>
+                            <input type="date" id="date_to" name="date_to">
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="category_id">Category</label>
+                            <select id="category_id" name="category_id">
+                                <option value="">All Categories</option>
+                                {% for category in categories %}
+                                <option value="{{ category.id }}" data-brand-id="{{ category.brand_id }}">{{ category.brand.name }} - {{ category.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="item_id">Item</label>
+                            <select id="item_id" name="item_id">
+                                <option value="">All Items</option>
+                                {% for item in items %}
+                                <option value="{{ item.id }}" data-brand-id="{{ item.brand_id }}" data-category-id="{{ item.category_id or '' }}">{{ item.brand.name }} - {{ item.essor_code or 'N/A' }} - {{ item.essor_name or 'N/A' }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="filter-actions">
+                    <button type="submit" class="btn-filter">📊 Update Chart</button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="sellthroughChart"></canvas>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        let chart = null;
+        
+        // Initialize chart
+        const ctx = document.getElementById('sellthroughChart').getContext('2d');
+        
+        function initChart() {
+            if (chart) {
+                chart.destroy();
+            }
+            
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Revenues ($)',
+                        data: [],
+                        borderColor: 'rgb(102, 126, 234)',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Sellthrough Data',
+                            font: {
+                                size: 18,
+                                weight: 'bold'
+                            },
+                            padding: {
+                                bottom: 20
+                            }
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    if (value >= 1000000) {
+                                        return (value / 1000000).toFixed(1) + 'M';
+                                    } else if (value >= 1000) {
+                                        return (value / 1000).toFixed(1) + 'K';
+                                    }
+                                    return value.toLocaleString();
+                                }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxTicksLimit: 12,
+                                callback: function(value, index) {
+                                    const label = this.getLabelForValue(value);
+                                    // Show every nth label based on data length
+                                    const labels = chart.data.labels;
+                                    if (labels.length > 20) {
+                                        const step = Math.ceil(labels.length / 12);
+                                        return index % step === 0 ? label : '';
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
+            });
+        }
+        
+        // Show/hide custom date inputs
+        document.getElementById('time_period').addEventListener('change', function() {
+            const isCustom = this.value === 'custom';
+            const dateFromRow = document.getElementById('customDateRow');
+            const dateToRow = document.getElementById('customDateRow2');
+            if (isCustom) {
+                dateFromRow.classList.add('show');
+                dateToRow.classList.add('show');
+            } else {
+                dateFromRow.classList.remove('show');
+                dateToRow.classList.remove('show');
+            }
+        });
+        
+        // Filter categories and items based on brand selection
+        document.getElementById('brand_id').addEventListener('change', function() {
+            const brandId = this.value;
+            
+            // Filter categories
+            const categorySelect = document.getElementById('category_id');
+            const categoryOptions = categorySelect.querySelectorAll('option');
+            categoryOptions.forEach(option => {
+                if (option.value === '') {
+                    option.style.display = '';
+                } else {
+                    const optionBrandId = option.getAttribute('data-brand-id');
+                    option.style.display = (brandId === '' || optionBrandId === brandId) ? '' : 'none';
+                }
+            });
+            
+            // Filter items
+            const itemSelect = document.getElementById('item_id');
+            const itemOptions = itemSelect.querySelectorAll('option');
+            itemOptions.forEach(option => {
+                if (option.value === '') {
+                    option.style.display = '';
+                } else {
+                    const optionBrandId = option.getAttribute('data-brand-id');
+                    option.style.display = (brandId === '' || optionBrandId === brandId) ? '' : 'none';
+                }
+            });
+            
+            // Reset selections if they become hidden
+            if (brandId !== '' && categorySelect.value !== '') {
+                const selectedCategory = categorySelect.options[categorySelect.selectedIndex];
+                if (selectedCategory.style.display === 'none') {
+                    categorySelect.value = '';
+                }
+            }
+            if (brandId !== '' && itemSelect.value !== '') {
+                const selectedItem = itemSelect.options[itemSelect.selectedIndex];
+                if (selectedItem.style.display === 'none') {
+                    itemSelect.value = '';
+                }
+            }
+        });
+        
+        // Filter items based on category selection
+        document.getElementById('category_id').addEventListener('change', function() {
+            const categoryId = this.value;
+            const brandId = document.getElementById('brand_id').value;
+            const itemSelect = document.getElementById('item_id');
+            
+            const itemOptions = itemSelect.querySelectorAll('option');
+            itemOptions.forEach(option => {
+                if (option.value === '') {
+                    option.style.display = '';
+                } else {
+                    const optionBrandId = option.getAttribute('data-brand-id');
+                    const optionCategoryId = option.getAttribute('data-category-id') || '';
+                    
+                    let show = true;
+                    if (brandId !== '' && optionBrandId !== brandId) {
+                        show = false;
+                    }
+                    if (categoryId !== '' && optionCategoryId !== categoryId) {
+                        show = false;
+                    }
+                    
+                    option.style.display = show ? '' : 'none';
+                }
+            });
+            
+            // Reset item selection if it becomes hidden
+            if (itemSelect.value !== '') {
+                const selectedItem = itemSelect.options[itemSelect.selectedIndex];
+                if (selectedItem.style.display === 'none') {
+                    itemSelect.value = '';
+                }
+            }
+        });
+        
+        // Load chart data
+        function loadChartData() {
+            const form = document.getElementById('dashboardForm');
+            const formData = new FormData(form);
+            
+            // Build query string
+            const params = new URLSearchParams();
+            for (const [key, value] of formData.entries()) {
+                if (value) {
+                    params.append(key, value);
+                }
+            }
+            
+            // Show loading state
+            const chartContainer = document.querySelector('.chart-container');
+            chartContainer.innerHTML = '<div class="chart-loading">Loading chart data...</div>';
+            
+            // Fetch data
+            fetch(`{{ url_for('sellthrough.api_chart_data') }}?${params.toString()}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        chartContainer.innerHTML = `<div class="chart-error">Error: ${data.error}</div>`;
+                        return;
+                    }
+                    
+                    // Restore canvas
+                    chartContainer.innerHTML = '<canvas id="sellthroughChart"></canvas>';
+                    const ctx = document.getElementById('sellthroughChart').getContext('2d');
+                    
+                    // Update or create chart
+                    if (chart) {
+                        chart.destroy();
+                    }
+                    
+                    chart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.dates,
+                            datasets: [{
+                                label: data.metric_label,
+                                data: data.values,
+                                borderColor: 'rgb(102, 126, 234)',
+                                backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.4,
+                                pointRadius: data.dates.length > 100 ? 0 : 3,
+                                pointHoverRadius: 5
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: `Sellthrough ${data.metric_label} (${data.start_date} to ${data.end_date})`,
+                                    font: {
+                                        size: 18,
+                                        weight: 'bold'
+                                    },
+                                    padding: {
+                                        bottom: 20
+                                    }
+                                },
+                                legend: {
+                                    display: true,
+                                    position: 'top'
+                                },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                    callbacks: {
+                                        label: function(context) {
+                                            const value = context.parsed.y;
+                                            if (data.metric_label.includes('Revenues')) {
+                                                return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                                            } else {
+                                                return value.toLocaleString();
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            if (data.metric_label.includes('Revenues')) {
+                                                if (value >= 1000000) {
+                                                    return '$' + (value / 1000000).toFixed(1) + 'M';
+                                                } else if (value >= 1000) {
+                                                    return '$' + (value / 1000).toFixed(1) + 'K';
+                                                }
+                                                return '$' + value.toLocaleString();
+                                            } else {
+                                                if (value >= 1000000) {
+                                                    return (value / 1000000).toFixed(1) + 'M';
+                                                } else if (value >= 1000) {
+                                                    return (value / 1000).toFixed(1) + 'K';
+                                                }
+                                                return value.toLocaleString();
+                                            }
+                                        }
+                                    }
+                                },
+                                x: {
+                                    ticks: {
+                                        maxTicksLimit: 12,
+                                        callback: function(value, index) {
+                                            const labels = chart.data.labels;
+                                            if (labels.length > 20) {
+                                                const step = Math.ceil(labels.length / 12);
+                                                return index % step === 0 ? labels[index] : '';
+                                            }
+                                            return labels[index];
+                                        }
+                                    }
+                                }
+                            },
+                            interaction: {
+                                mode: 'nearest',
+                                axis: 'x',
+                                intersect: false
+                            }
+                        }
+                    });
+                })
+                .catch(error => {
+                    chartContainer.innerHTML = `<div class="chart-error">Error loading data: ${error.message}</div>`;
+                    console.error('Error:', error);
+                });
+        }
+        
+        // Handle form submission
+        document.getElementById('dashboardForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            loadChartData();
+        });
+        
+        // Initialize chart on page load
+        initChart();
+        
+        // Load initial data
+        loadChartData();
+    </script>
+{% endblock %}
+
