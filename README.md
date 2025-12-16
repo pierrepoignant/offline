@@ -12,6 +12,7 @@ Flask application for the offline team with user authentication and management.
 - Blueprint-based architecture for easy extension
 - Core models: Brands, Categories, Channels, Locations, Items
 - Sellthrough data management
+- CRM ticket system with ticket types and flags
 
 ## Project Structure
 
@@ -62,10 +63,17 @@ python database/init_database.py
 
 4. Initialize Alembic and create initial migration:
 ```bash
+# Activate virtual environment
+source venv/bin/activate
+
+# Initialize Alembic
 ./init_alembic.sh
 # Or manually:
 alembic revision --autogenerate -m "Initial migration"
 alembic upgrade head
+
+# Or use the migration script:
+python run_migration.py
 ```
 
 5. Run the application:
@@ -140,13 +148,29 @@ The application uses PostgreSQL with SQLAlchemy ORM. The database name is `offli
 - `ChannelLocation`: Locations within channels
 - `Item`: Specific products with Essor codes
 - `SellthroughData`: Sellthrough data with date, revenues, units, stores
+- `CrmTicket`: Customer relationship management tickets
+- `CrmTicketType`: Classification types for tickets
+- `CrmTicketFlag`: Flags with colors for tagging tickets (many-to-many relationship)
 - `users`: User accounts with authentication information (legacy table)
 
 ### Database Migrations
 
 The application uses Alembic for database migrations:
 
+**Using the migration script (recommended):**
 ```bash
+# Activate virtual environment first
+source venv/bin/activate
+
+# Run migrations using the script
+python run_migration.py
+```
+
+**Using Alembic directly:**
+```bash
+# Activate virtual environment first
+source venv/bin/activate
+
 # Create a new migration
 alembic revision --autogenerate -m "Description of changes"
 

@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 """
 Run Alembic migrations for production database
-This script creates all database tables using SQLAlchemy
+This script runs Alembic migrations using the configured database
 """
 
 import os
 import sys
+from alembic.config import Config
+from alembic import command
 
 # Set production database environment variables (will use remote by default)
 # These can be overridden by command line or environment
@@ -16,34 +18,23 @@ if not os.getenv('DB_HOST'):
     os.environ['DB_PASSWORD'] = 'sX9Q1N78HgODzR6anjYV'
     os.environ['DB_NAME'] = 'offline'
 
-# Import after setting env vars
-from app import create_app
-from models import db, Brand, Category, Channel, ChannelCustomer, Item, SellthroughData
-
-def create_tables():
-    """Create all tables using SQLAlchemy"""
-    print("Connecting to production database...")
+def run_migrations():
+    """Run Alembic migrations"""
+    print("Running Alembic migrations...")
     print(f"Host: {os.getenv('DB_HOST')}")
     print(f"Database: {os.getenv('DB_NAME')}")
     
-    app = create_app(db_type=None)  # Use remote database by default
+    # Get the Alembic configuration
+    alembic_cfg = Config("alembic.ini")
     
-    with app.app_context():
-        print("\nCreating database tables...")
-        try:
-            db.create_all()
-            print("✓ All tables created successfully!")
-            print("\nCreated tables:")
-            print("  - brands")
-            print("  - categories")
-            print("  - channels")
-            print("  - channel_locations")
-            print("  - items")
-            print("  - sellthrough_data")
-        except Exception as e:
-            print(f"✗ Error creating tables: {e}")
-            sys.exit(1)
+    try:
+        print("\nUpgrading database to head...")
+        command.upgrade(alembic_cfg, "head")
+        print("✓ Migrations applied successfully!")
+    except Exception as e:
+        print(f"✗ Error running migrations: {e}")
+        sys.exit(1)
 
 if __name__ == '__main__':
-    create_tables()
+    run_migrations()
 

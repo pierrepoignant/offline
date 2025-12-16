@@ -439,11 +439,600 @@ def parse_percentage(value_str):
     except (ValueError, TypeError):
         return None
 
+def parse_yyyyww_to_monday(yyyyww_str):
+    """Parse YYYYWW format (e.g., 202401) to the first Monday of that week"""
+    try:
+        year = int(yyyyww_str[:4])
+        week = int(yyyyww_str[4:])
+        
+        # Get January 1st of the year
+        jan1 = datetime(year, 1, 1).date()
+        # ISO week 1 is the week containing Jan 4
+        # Find the Monday of ISO week 1
+        jan4 = datetime(year, 1, 4).date()
+        days_to_monday = (jan4.weekday()) % 7  # 0 = Monday, so this gives days to subtract
+        week1_monday = jan4 - timedelta(days=days_to_monday)
+        
+        # Calculate the Monday of the requested week
+        target_monday = week1_monday + timedelta(weeks=week - 1)
+        
+        return target_monday
+    except (ValueError, IndexError) as e:
+        raise ValueError(f"Invalid YYYYWW format: {yyyyww_str}") from e
+
+def parse_dec_wk_to_monday(dec_wk_str):
+    """Parse 'Dec Wk 5 2024' format to the first Monday of that week"""
+    try:
+        # Parse format like "Dec Wk 5 2024"
+        parts = dec_wk_str.strip().split()
+        if len(parts) != 4 or parts[1].lower() != 'wk':
+            raise ValueError(f"Invalid format: {dec_wk_str}")
+        
+        month_name = parts[0]
+        week_num = int(parts[2])
+        year = int(parts[3])
+        
+        # Map month names to numbers
+        months = {
+            'Jan': 1, 'Feb': 2, 'Mar': 3, 'Apr': 4, 'May': 5, 'Jun': 6,
+            'Jul': 7, 'Aug': 8, 'Sep': 9, 'Oct': 10, 'Nov': 11, 'Dec': 12
+        }
+        month = months.get(month_name, None)
+        if month is None:
+            raise ValueError(f"Invalid month name: {month_name}")
+        
+        # Find the first day of the month
+        first_day = datetime(year, month, 1).date()
+        # Find the first Monday of the month
+        days_to_monday = (7 - first_day.weekday()) % 7
+        if days_to_monday == 0 and first_day.weekday() != 0:
+            days_to_monday = 7
+        
+        first_monday = first_day + timedelta(days=days_to_monday)
+        # Week 1 is the first week that contains a Monday in the month
+        # Calculate the Monday of the requested week
+        target_monday = first_monday + timedelta(weeks=week_num - 1)
+        
+        return target_monday
+    except (ValueError, IndexError) as e:
+        raise ValueError(f"Invalid 'Dec Wk 5 2024' format: {dec_wk_str}") from e
+
+def parse_fiscal_week_ending_to_monday(fiscal_str):
+    """Parse 'Fiscal Week Ending 01-11-2025' format to the Monday of that week (minus 6 days)"""
+    try:
+        # Extract date from "Fiscal Week Ending 01-11-2025"
+        date_part = fiscal_str.replace('Fiscal Week Ending', '').strip()
+        week_ending = datetime.strptime(date_part, '%m-%d-%Y').date()
+        # Monday is 6 days before the ending date (Sunday)
+        monday = week_ending - timedelta(days=6)
+        return monday
+    except (ValueError, IndexError) as e:
+        raise ValueError(f"Invalid 'Fiscal Week Ending' format: {fiscal_str}") from e
+
+def parse_excel_serial_to_monday(excel_serial_str):
+    """Parse Excel serial date (first 5 digits) to the Monday of that week"""
+    try:
+        # Get first 5 digits
+        serial_str = str(excel_serial_str).strip()[:5]
+        serial_days = int(serial_str)
+        
+        # Excel epoch is December 30, 1899 (or January 1, 1900 depending on system)
+        # Most systems use December 30, 1899
+        excel_epoch = datetime(1899, 12, 30).date()
+        date = excel_epoch + timedelta(days=serial_days)
+        
+        # Find the Monday of that week
+        days_to_monday = (date.weekday()) % 7
+        monday = date - timedelta(days=days_to_monday)
+        
+        return monday
+    except (ValueError, IndexError) as e:
+        raise ValueError(f"Invalid Excel serial date: {excel_serial_str}") from e
+
+def detect_csv_format(headers):
+    """Detect CSV format based on headers"""
+    headers_lower = [h.lower().strip() for h in headers]
+    
+    # Check for Walmart format
+    walmart_headers = [
+        'walmart_calendar_week', 'walmart_item_number', 'item_name',
+        'pos_sales_this_year', 'pos_quantity_this_year',
+        'dollar_per_store_per_week_or_per_day_this_year',
+        'units_per_store_per_week_or_per_day_this_year',
+        'traited_store_count_this_year', 'repl_instock_percentage_this_year'
+    ]
+    if all(h in headers_lower for h in walmart_headers):
+        return 'walmart'
+    
+    # Check for Target format
+    target_headers = ['date', 'dpci', 'item description', 'sales $', 'sales u', 'sales $ pspw', 'sales u pspw', 'oos %']
+    if all(h in headers_lower for h in target_headers):
+        return 'target'
+    
+    # Check for CVS format
+    cvs_headers = ['time', 'product', 'total sales $ wtd', 'total units wtd']
+    if all(h in headers_lower for h in cvs_headers):
+        return 'cvs'
+    
+    # Check for KeHe format
+    kehe_headers = ['time frame', 'geography', 'description', 'dollars', 'units',
+                    'average weekly dollars per store selling per item',
+                    'average weekly units per store selling per item']
+    if all(h in headers_lower for h in kehe_headers):
+        return 'kehe'
+    
+    return None
+
+def find_or_create_channel_item(channel_id, channel_code, channel_name):
+    """Find or create ChannelItem and return the item_id"""
+    # First, try to find existing ChannelItem by channel_code
+    channel_item = ChannelItem.query.filter_by(
+        channel_id=channel_id,
+        channel_code=channel_code
+    ).first()
+    
+    if channel_item:
+        return channel_item.item_id, channel_item
+    
+    # If not found, we need to create both Item and ChannelItem
+    # But we need a brand_id to create an Item. Since we don't have that info,
+    # we'll need to handle this case - for now, we'll raise an error
+    # In a real scenario, you might want to prompt for brand or have a default
+    
+    # Actually, let's check if we can find an item by essor_code matching channel_code
+    # This is a fallback - if channel_code happens to match an essor_code
+    item = Item.query.filter_by(essor_code=channel_code).first()
+    
+    if item:
+        # Check if a channel_item already exists for this channel_id and item_id
+        existing_channel_item = ChannelItem.query.filter_by(
+            channel_id=channel_id,
+            item_id=item.id
+        ).first()
+        
+        if existing_channel_item:
+            # Update the existing channel_item with the new channel_code and channel_name if needed
+            updated = False
+            if existing_channel_item.channel_code != channel_code:
+                existing_channel_item.channel_code = channel_code
+                updated = True
+            if channel_name and existing_channel_item.channel_name != channel_name:
+                existing_channel_item.channel_name = channel_name
+                updated = True
+            return item.id, existing_channel_item
+        
+        # Create ChannelItem linking to this item
+        channel_item = ChannelItem(
+            channel_id=channel_id,
+            item_id=item.id,
+            channel_code=channel_code,
+            channel_name=channel_name or item.essor_name or channel_code
+        )
+        db.session.add(channel_item)
+        db.session.flush()
+        return item.id, channel_item
+    
+    # If we still can't find/create, return None for item_id
+    # The caller will import the data without the item link, and the link can be added later
+    print(f"  ⚠ Warning: No item found for channel_code '{channel_code}'. Importing without item link.")
+    return None, None
+
+def get_kehe_channel_id(geography):
+    """Get channel_id for KeHe format based on GEOGRAPHY field"""
+    geography_upper = geography.strip().upper()
+    
+    if geography_upper == "EREWHON MARKETS - TOTAL US":
+        return 76
+    elif geography_upper == "FRESH THYME MARKET - TOTAL US":
+        return 77
+    elif geography_upper == "SPROUTS FARMERS MARKET - TOTAL US W/O PL":
+        return 5
+    else:
+        raise ValueError(f"Unknown KeHe geography: {geography}")
+
+def process_walmart_row(row, row_num, results, dry_run):
+    """Process a Walmart format row"""
+    try:
+        # Parse date
+        week_str = row.get('walmart_calendar_week', '').strip()
+        if not week_str:
+            raise ValueError("Missing 'walmart_calendar_week' field")
+        week_date = parse_yyyyww_to_monday(week_str)
+        
+        # Get channel_id = 2
+        channel_id = 2
+        channel = Channel.query.get(channel_id)
+        if not channel:
+            raise ValueError(f"Channel with id {channel_id} not found")
+        
+        # Get channel_code and channel_name
+        channel_code = row.get('walmart_item_number', '').strip()
+        channel_name = row.get('item_name', '').strip()
+        
+        if not channel_code:
+            raise ValueError("Missing 'walmart_item_number' field")
+        
+        # Find or create channel_item
+        item_id, channel_item = find_or_create_channel_item(channel_id, channel_code, channel_name)
+        
+        # Update channel_item name if provided
+        if channel_item and channel_name and channel_item.channel_name != channel_name:
+            channel_item.channel_name = channel_name
+        
+        # Get item to find brand_id (if item_id exists)
+        brand_id = None
+        if item_id:
+            item = Item.query.get(item_id)
+            if not item:
+                raise ValueError(f"Item with id {item_id} not found")
+            brand_id = item.brand_id
+                
+        # Parse numeric fields
+        revenues = Decimal(str(parse_numeric_value(row.get('pos_sales_this_year', '0'), 0)))
+        units = int(parse_numeric_value(row.get('pos_quantity_this_year', '0'), 0))
+        usd_pspw = parse_numeric_value(row.get('dollar_per_store_per_week_or_per_day_this_year', ''), None)
+        if usd_pspw is not None:
+            usd_pspw = Decimal(str(usd_pspw))
+        units_pspw = parse_numeric_value(row.get('units_per_store_per_week_or_per_day_this_year', ''), None)
+        if units_pspw is not None:
+            units_pspw = Decimal(str(units_pspw))
+        stores = int(parse_numeric_value(row.get('traited_store_count_this_year', '0'), 0))
+        instock = parse_percentage(row.get('repl_instock_percentage_this_year', ''))
+        
+        # Find or create/update sellthrough_data
+        # Handle NULL item_id properly in query
+        if item_id is None:
+            existing = SellthroughData.query.filter(
+                SellthroughData.date == week_date,
+                SellthroughData.channel_id == channel_id,
+                SellthroughData.item_id.is_(None),
+                SellthroughData.customer_id.is_(None),
+                SellthroughData.channel_code == channel_code
+            ).first()
+        else:
+                    existing = SellthroughData.query.filter_by(
+                        date=week_date,
+                channel_id=channel_id,
+                item_id=item_id,
+                customer_id=None
+                    ).first()
+        
+        if existing:
+            existing.revenues = revenues
+            existing.units = units
+            existing.stores = stores
+            existing.usd_pspw = usd_pspw
+            existing.units_pspw = units_pspw
+            existing.instock = instock
+            existing.channel_code = channel_code
+            existing.brand_id = brand_id
+            results['updated'] += 1
+        else:
+            sellthrough = SellthroughData(
+                date=week_date,
+                brand_id=brand_id,
+                item_id=item_id,
+                channel_id=channel_id,
+                customer_id=None,
+                revenues=revenues,
+                units=units,
+                stores=stores,
+                usd_pspw=usd_pspw,
+                units_pspw=units_pspw,
+                instock=instock,
+                channel_code=channel_code
+            )
+            db.session.add(sellthrough)
+            results['created'] += 1
+        
+        results['processed'] += 1
+        return True
+    except Exception as e:
+        error_msg = f"Row {row_num}: {str(e)}"
+        print(f"  ✗ ERROR: {error_msg}")
+        import traceback
+        traceback_str = traceback.format_exc()
+        print(f"  Traceback: {traceback_str}")
+        results['errors'].append(error_msg)
+        _save_import_error('csv', row, f"{error_msg}\n\n{traceback_str}", row_num)
+        results['skipped'] += 1
+        # Rollback the session to clear any pending changes
+        try:
+            db.session.rollback()
+        except:
+            pass
+        return False
+
+def process_target_row(row, row_num, results, dry_run):
+    """Process a Target format row"""
+    try:
+        # Parse date
+        date_str = row.get('Date', '').strip()
+        if not date_str:
+            raise ValueError("Missing 'Date' field")
+        week_date = parse_dec_wk_to_monday(date_str)
+        
+        # Get channel_id = 1
+        channel_id = 1
+        channel = Channel.query.get(channel_id)
+        if not channel:
+            raise ValueError(f"Channel with id {channel_id} not found")
+        
+        # Get channel_code and channel_name
+        channel_code = row.get('DPCI', '').strip()
+        channel_name = row.get('Item Description', '').strip()
+        
+        if not channel_code:
+            raise ValueError("Missing 'DPCI' field")
+        
+        # Find or create channel_item
+        item_id, channel_item = find_or_create_channel_item(channel_id, channel_code, channel_name)
+        
+        # Update channel_item name if provided
+        if channel_item and channel_name and channel_item.channel_name != channel_name:
+            channel_item.channel_name = channel_name
+        
+        # Get item to find brand_id (if item_id exists)
+        brand_id = None
+        if item_id:
+            item = Item.query.get(item_id)
+            if not item:
+                raise ValueError(f"Item with id {item_id} not found")
+            brand_id = item.brand_id
+        
+        # Parse numeric fields
+        revenues = Decimal(str(parse_numeric_value(row.get('Sales $', '0'), 0)))
+        units = int(parse_numeric_value(row.get('Sales U', '0'), 0))
+        usd_pspw = parse_numeric_value(row.get('Sales $ PSPW', ''), None)
+        if usd_pspw is not None:
+            usd_pspw = Decimal(str(usd_pspw))
+        units_pspw = parse_numeric_value(row.get('Sales U PSPW', ''), None)
+        if units_pspw is not None:
+            units_pspw = Decimal(str(units_pspw))
+        oos = parse_percentage(row.get('OOS %', ''))
+        
+        # Find or create/update sellthrough_data
+        # Handle NULL item_id properly in query
+        if item_id is None:
+            existing = SellthroughData.query.filter(
+                SellthroughData.date == week_date,
+                SellthroughData.channel_id == channel_id,
+                SellthroughData.item_id.is_(None),
+                SellthroughData.customer_id.is_(None),
+                SellthroughData.channel_code == channel_code
+            ).first()
+        else:
+            existing = SellthroughData.query.filter_by(
+                date=week_date,
+                channel_id=channel_id,
+                item_id=item_id,
+                customer_id=None
+            ).first()
+        
+        if existing:
+            existing.revenues = revenues
+            existing.units = units
+            existing.usd_pspw = usd_pspw
+            existing.units_pspw = units_pspw
+            existing.oos = oos
+            existing.channel_code = channel_code
+            existing.brand_id = brand_id
+            results['updated'] += 1
+        else:
+            sellthrough = SellthroughData(
+                date=week_date,
+                brand_id=brand_id,
+                item_id=item_id,
+                channel_id=channel_id,
+                customer_id=None,
+                revenues=revenues,
+                units=units,
+                usd_pspw=usd_pspw,
+                units_pspw=units_pspw,
+                oos=oos,
+                channel_code=channel_code
+            )
+            db.session.add(sellthrough)
+            results['created'] += 1
+        
+        results['processed'] += 1
+        return True
+    except Exception as e:
+        error_msg = f"Row {row_num}: {str(e)}"
+        print(f"  ✗ ERROR: {error_msg}")
+        import traceback
+        traceback_str = traceback.format_exc()
+        print(f"  Traceback: {traceback_str}")
+        results['errors'].append(error_msg)
+        _save_import_error('csv', row, f"{error_msg}\n\n{traceback_str}", row_num)
+        results['skipped'] += 1
+        # Rollback the session to clear any pending changes
+        try:
+            db.session.rollback()
+        except:
+            pass
+        return False
+
+def process_cvs_row(row, row_num, results, dry_run):
+    """Process a CVS format row"""
+    try:
+        # Parse date
+        time_str = row.get('Time', '').strip()
+        if not time_str:
+            raise ValueError("Missing 'Time' field")
+        week_date = parse_fiscal_week_ending_to_monday(time_str)
+        
+        # Get channel_id = 3
+        channel_id = 3
+        channel = Channel.query.get(channel_id)
+        if not channel:
+            raise ValueError(f"Channel with id {channel_id} not found")
+        
+        # Get channel_code
+        channel_code = row.get('Product', '').strip()
+        if not channel_code:
+            raise ValueError("Missing 'Product' field")
+        
+        # Find or create channel_item (no channel_name for CVS)
+        item_id, channel_item = find_or_create_channel_item(channel_id, channel_code, None)
+        
+        # Get item to find brand_id (if item_id exists)
+        brand_id = None
+        if item_id:
+            item = Item.query.get(item_id)
+            if not item:
+                raise ValueError(f"Item with id {item_id} not found")
+            brand_id = item.brand_id
+        
+        # Parse numeric fields
+        revenues = Decimal(str(parse_numeric_value(row.get('Total Sales $ WTD', '0'), 0)))
+        units = int(parse_numeric_value(row.get('Total Units WTD', '0'), 0))
+        
+        # Find or create/update sellthrough_data
+        existing = SellthroughData.query.filter_by(
+            date=week_date,
+            channel_id=channel_id,
+            item_id=item_id,
+            customer_id=None
+        ).first()
+        
+        if existing:
+            existing.revenues = revenues
+            existing.units = units
+            existing.channel_code = channel_code
+            existing.brand_id = brand_id
+            results['updated'] += 1
+        else:
+            sellthrough = SellthroughData(
+                date=week_date,
+                brand_id=brand_id,
+                item_id=item_id,
+                channel_id=channel_id,
+                customer_id=None,
+                revenues=revenues,
+                units=units,
+                channel_code=channel_code
+            )
+            db.session.add(sellthrough)
+            results['created'] += 1
+        
+        results['processed'] += 1
+        return True
+    except Exception as e:
+        error_msg = f"Row {row_num}: {str(e)}"
+        print(f"  ✗ ERROR: {error_msg}")
+        import traceback
+        traceback_str = traceback.format_exc()
+        print(f"  Traceback: {traceback_str}")
+        results['errors'].append(error_msg)
+        _save_import_error('csv', row, f"{error_msg}\n\n{traceback_str}", row_num)
+        results['skipped'] += 1
+        return False
+
+def process_kehe_row(row, row_num, results, dry_run):
+    """Process a KeHe format row"""
+    try:
+        # Parse date
+        time_frame = row.get('TIME FRAME', '').strip()
+        if not time_frame:
+            raise ValueError("Missing 'TIME FRAME' field")
+        week_date = parse_excel_serial_to_monday(time_frame)
+        
+        # Get channel_id from GEOGRAPHY
+        geography = row.get('GEOGRAPHY', '').strip()
+        if not geography:
+            raise ValueError("Missing 'GEOGRAPHY' field")
+        channel_id = get_kehe_channel_id(geography)
+        channel = Channel.query.get(channel_id)
+        if not channel:
+            raise ValueError(f"Channel with id {channel_id} not found")
+        
+        # Get channel_code
+        channel_code = row.get('DESCRIPTION', '').strip()
+        if not channel_code:
+            raise ValueError("Missing 'DESCRIPTION' field")
+        
+        # Find or create channel_item (no channel_name for KeHe)
+        item_id, channel_item = find_or_create_channel_item(channel_id, channel_code, None)
+        
+        # Get item to find brand_id (if item_id exists)
+        brand_id = None
+        if item_id:
+            item = Item.query.get(item_id)
+            if not item:
+                raise ValueError(f"Item with id {item_id} not found")
+            brand_id = item.brand_id
+        
+        # Parse numeric fields
+        revenues = Decimal(str(parse_numeric_value(row.get('Dollars', '0'), 0)))
+        units = int(parse_numeric_value(row.get('Units', '0'), 0))
+        usd_pspw = parse_numeric_value(row.get('Average Weekly Dollars Per Store Selling Per Item', ''), None)
+        if usd_pspw is not None:
+            usd_pspw = Decimal(str(usd_pspw))
+        units_pspw = parse_numeric_value(row.get('Average Weekly Units Per Store Selling Per Item', ''), None)
+        if units_pspw is not None:
+            units_pspw = Decimal(str(units_pspw))
+        
+        # Find or create/update sellthrough_data
+        # Handle NULL item_id properly in query
+        if item_id is None:
+            existing = SellthroughData.query.filter(
+                SellthroughData.date == week_date,
+                SellthroughData.channel_id == channel_id,
+                SellthroughData.item_id.is_(None),
+                SellthroughData.customer_id.is_(None),
+                SellthroughData.channel_code == channel_code
+            ).first()
+        else:
+            existing = SellthroughData.query.filter_by(
+                date=week_date,
+                channel_id=channel_id,
+                item_id=item_id,
+                customer_id=None
+            ).first()
+        
+        if existing:
+            existing.revenues = revenues
+            existing.units = units
+            existing.usd_pspw = usd_pspw
+            existing.units_pspw = units_pspw
+            existing.channel_code = channel_code
+            existing.brand_id = brand_id
+            results['updated'] += 1
+        else:
+            sellthrough = SellthroughData(
+                date=week_date,
+                brand_id=brand_id,
+                item_id=item_id,
+                channel_id=channel_id,
+                customer_id=None,
+                revenues=revenues,
+                units=units,
+                usd_pspw=usd_pspw,
+                units_pspw=units_pspw,
+                channel_code=channel_code
+            )
+            db.session.add(sellthrough)
+            results['created'] += 1
+        
+        results['processed'] += 1
+        return True
+    except Exception as e:
+        error_msg = f"Row {row_num}: {str(e)}"
+        print(f"  ✗ ERROR: {error_msg}")
+        import traceback
+        traceback_str = traceback.format_exc()
+        print(f"  Traceback: {traceback_str}")
+        results['errors'].append(error_msg)
+        _save_import_error('csv', row, f"{error_msg}\n\n{traceback_str}", row_num)
+        results['skipped'] += 1
+        return False
+
 @sellthrough_bp.route('/import', methods=['GET', 'POST'])
 @login_required
 @admin_required
 def import_data():
-    """Import sellthrough data from CSV file"""
+    """Import sellthrough data from CSV file with format detection"""
     if request.method == 'GET':
         return render_template('sellthrough/import.html')
     
@@ -475,9 +1064,17 @@ def import_data():
         stream = io.StringIO(file.stream.read().decode("UTF8"), newline=None)
         csv_reader = csv.DictReader(stream)
         
-        # Get column names
+        # Get column names and detect format
         csv_columns = csv_reader.fieldnames
         print(f"\n📋 CSV Columns detected: {', '.join(csv_columns)}")
+        
+        csv_format = detect_csv_format(csv_columns)
+        if not csv_format:
+            flash('Unrecognized CSV format. Please ensure the CSV matches one of the supported formats (Walmart, Target, CVS, or KeHe).', 'error')
+            return render_template('sellthrough/import.html')
+        
+        print(f"✓ Detected format: {csv_format.upper()}")
+        print("-"*60)
         
         results = {
             'processed': 0,
@@ -498,310 +1095,25 @@ def import_data():
         print(f"\n📊 Total rows to process: {len(rows_to_process)}" + (f" (limited to {max_rows} for dry-run)" if max_rows else ""))
         print("-"*60)
         
-        # Process each row
+        # Process each row based on format
         for row_num, row in enumerate(rows_to_process, start=2):  # Start at 2 (header is row 1)
             if row_num % 10 == 0 or row_num == 2:
                 print(f"Processing row {row_num}/{total_rows + 1}...")
-            try:
-                # Parse week (date)
-                week_str = row.get('week', '').strip()
-                if not week_str:
-                    error_msg = f"Row {row_num}: Missing 'week' field"
-                    results['errors'].append(error_msg)
-                    _save_import_error('csv', row, error_msg, row_num)
-                    results['skipped'] += 1
-                    continue
-                
-                try:
-                    week_date = datetime.strptime(week_str, '%Y-%m-%d').date()
-                except ValueError:
-                    error_msg = f"Row {row_num}: Invalid date format for 'week' (expected YYYY-MM-DD): {week_str}"
-                    results['errors'].append(error_msg)
-                    _save_import_error('csv', row, error_msg, row_num)
-                    results['skipped'] += 1
-                    continue
-                
-                # Find or create channel
-                channel_name = row.get('channel', '').strip()
-                if not channel_name:
-                    error_msg = f"Row {row_num}: Missing 'channel' field"
-                    results['errors'].append(error_msg)
-                    _save_import_error('csv', row, error_msg, row_num)
-                    results['skipped'] += 1
-                    continue
-                
-                channel = Channel.query.filter_by(name=channel_name).first()
-                if not channel:
-                    print(f"  ➕ Creating new channel: {channel_name}")
-                    channel = Channel(name=channel_name)
-                    db.session.add(channel)
-                    db.session.flush()  # Get the ID
-                    results['created'] += 1
-                else:
-                    print(f"  ✓ Found channel: {channel_name}")
-                
-                # Find or create item
-                item = None
-                # Get fields - convert empty strings to None for proper null handling
-                essor_item_code = row.get('essor_item_code', '').strip() or None
-                essor_item_name = row.get('essor_item_name', '').strip() or None
-                channel_item_code = row.get('channel_item_code', '').strip() or None
-                channel_item_name = row.get('channel_item_name', '').strip() or None
-                
-                # Try to find item by essor_code first, then essor_name
-                if essor_item_code:
-                    item = Item.query.filter_by(essor_code=essor_item_code).first()
-                    if item:
-                        print(f"  ✓ Found item by essor_code: {essor_item_code}")
-                if not item and essor_item_name:
-                    item = Item.query.filter_by(essor_name=essor_item_name).first()
-                    if item:
-                        print(f"  ✓ Found item by essor_name: {essor_item_name}")
-                
-                # If not found, try channel_items
-                if not item:
-                    channel_item = None
-                    if channel_item_code:
-                        channel_item = ChannelItem.query.filter_by(
-                            channel_id=channel.id,
-                            channel_code=channel_item_code
-                        ).first()
-                        if channel_item:
-                            print(f"  ✓ Found item by channel_item_code: {channel_item_code}")
-                    if not channel_item and channel_item_name:
-                        channel_item = ChannelItem.query.filter_by(
-                            channel_id=channel.id,
-                            channel_name=channel_item_name
-                        ).first()
-                        if channel_item:
-                            print(f"  ✓ Found item by channel_item_name: {channel_item_name}")
-                    
-                    if channel_item:
-                        item = channel_item.item
-                
-                # If still not found, create item
-                if not item:
-                    print(f"  ➕ Creating new item...")
-                    # Get or create brand from CSV - check both name and code
-                    brand_name = row.get('brand', '').strip()
-                    brand_code = row.get('brand_code', '').strip() or None
-                    
-                    if not brand_name and not brand_code:
-                        error_msg = f"Row {row_num}: Missing 'brand' or 'brand_code' field (required for item creation)"
-                        results['errors'].append(error_msg)
-                        _save_import_error('csv', row, error_msg, row_num)
-                        results['skipped'] += 1
-                        continue
-                    
-                    # Try to find brand - check brand field against both name and code
-                    # Also check brand_code field against both name and code
-                    brand = None
-                    if brand_name:
-                        # Check brand field against both name and code
-                        brand = Brand.query.filter(
-                            (Brand.name == brand_name) | (Brand.code == brand_name)
-                        ).first()
-                    if not brand and brand_code:
-                        # Check brand_code field against both name and code
-                        brand = Brand.query.filter(
-                            (Brand.name == brand_code) | (Brand.code == brand_code)
-                        ).first()
-                    
-                    if not brand:
-                        print(f"    ➕ Creating new brand: {brand_name or brand_code}")
-                        brand = Brand(name=brand_name or brand_code, code=brand_code)
-                        db.session.add(brand)
-                        db.session.flush()
-                        results['created'] += 1
-                    else:
-                        # Update brand code if we have one and it's missing
-                        if brand_code and not brand.code:
-                            brand.code = brand_code
-                            print(f"    ↻ Updated brand code: {brand_name} -> {brand_code}")
-                        print(f"    ✓ Found brand: {brand_name or brand.code}")
-                    
-                    # Create item - must have at least essor_code or essor_name, or channel fields
-                    if not essor_item_code and not essor_item_name and not channel_item_code and not channel_item_name:
-                        error_msg = f"Row {row_num}: Cannot create item - no essor_item_code, essor_item_name, channel_item_code, or channel_item_name provided"
-                        results['errors'].append(error_msg)
-                        _save_import_error('csv', row, error_msg, row_num)
-                        results['skipped'] += 1
-                        continue
-                    
-                    # Don't copy between essor_code and essor_name - leave null if not provided
-                    # Only use channel fields as fallback if we have absolutely nothing
-                    if not essor_item_code and not essor_item_name:
-                        if channel_item_code:
-                            essor_item_code = channel_item_code
-                        elif channel_item_name:
-                            essor_item_name = channel_item_name
-                    
-                    print(f"    ➕ Creating item: code={essor_item_code or 'NULL'}, name={essor_item_name or 'NULL'}")
-                    item = Item(
-                        essor_code=essor_item_code,
-                        essor_name=essor_item_name,
-                        brand_id=brand.id,
-                        category_id=None  # Optional - can be null
-                    )
-                    
-                    db.session.add(item)
-                    db.session.flush()
-                    results['created'] += 1
-                
-                # Always ensure channel_item exists (create or update)
-                # Only create/update if we have channel fields OR if this is a newly created item
-                channel_item = ChannelItem.query.filter_by(
-                    channel_id=channel.id,
-                    item_id=item.id
-                ).first()
-                
-                # Determine if we should create/update channel_item
-                should_create_channel_item = False
-                if channel_item_code or channel_item_name:
-                    # We have channel info, so we should have a channel_item
-                    should_create_channel_item = True
-                elif not channel_item:
-                    # Item was just created and we don't have a channel_item yet
-                    # Create one with channel fields (even if null) or essor fields as fallback
-                    should_create_channel_item = True
-                
-                if should_create_channel_item:
-                    if channel_item:
-                        # Update existing channel_item with channel info (only if provided)
-                        updated = False
-                        if channel_item_code is not None and channel_item.channel_code != channel_item_code:
-                            channel_item.channel_code = channel_item_code
-                            updated = True
-                        if channel_item_name is not None and channel_item.channel_name != channel_item_name:
-                            channel_item.channel_name = channel_item_name
-                            updated = True
-                        if updated:
-                            print(f"  ↻ Updated channel_item: code={channel_item_code}, name={channel_item_name}")
-                    else:
-                        # Create new channel_item entry
-                        # IMPORTANT: Don't mix code and name fields
-                        # channel_code should come from: channel_item_code > essor_item_code > item.essor_code
-                        # channel_name should come from: channel_item_name > essor_item_name > item.essor_name
-                        # Never use a name field as a code field
-                        channel_code = channel_item_code if channel_item_code is not None else (essor_item_code if essor_item_code is not None else item.essor_code)
-                        channel_name = channel_item_name if channel_item_name is not None else (essor_item_name if essor_item_name is not None else item.essor_name)
-                        
-                        print(f"  ➕ Creating channel_item: code={channel_code}, name={channel_name}")
-                        channel_item = ChannelItem(
-                            channel_id=channel.id,
-                            item_id=item.id,
-                            channel_code=channel_code,
-                            channel_name=channel_name
-                        )
-                        db.session.add(channel_item)
-                        results['created'] += 1
-                
-                # Find or create customer (optional)
-                customer = None
-                customer_name = row.get('location', '').strip()  # Keep CSV column name as 'location' for backward compatibility
-                if customer_name:
-                    customer = ChannelCustomer.query.filter_by(
-                        channel_id=channel.id,
-                        name=customer_name
-                    ).first()
-                    
-                    if not customer:
-                        print(f"  ➕ Creating new customer: {customer_name}")
-                        customer = ChannelCustomer(
-                            channel_id=channel.id,
-                            name=customer_name
-                        )
-                        db.session.add(customer)
-                        db.session.flush()
-                        results['created'] += 1
-                    else:
-                        print(f"  ✓ Found customer: {customer_name}")
-                
-                # Parse numeric fields with proper handling of commas, dollar signs, etc.
-                units_raw = row.get('unit', '0') or '0'
-                units = int(parse_numeric_value(units_raw, 0))
-                
-                sales_raw = row.get('sales', '0') or '0'
-                revenues = Decimal(str(parse_numeric_value(sales_raw, 0)))
-                
-                # Skip rows with zero sales
-                if revenues == 0:
-                    print(f"  ⏭ Skipping row {row_num}: sales is 0")
-                    results['skipped'] += 1
-                    continue
-                
-                stores_raw = row.get('stores', '0') or '0'
-                stores = int(parse_numeric_value(stores_raw, 0))
-                
-                oos_raw = row.get('oos', '').strip()
-                oos = parse_percentage(oos_raw)
-                
-                print(f"  📊 Parsed values: units={units}, revenues=${revenues}, stores={stores}, oos={oos}%")
-                
-                # Get brand_id from item
-                brand_id = item.brand_id
-                
-                # Check for existing record (unique constraint: date, channel_id, item_id, customer_id)
-                # Handle NULL customer_id properly
-                if customer:
-                    existing = SellthroughData.query.filter_by(
-                        date=week_date,
-                        channel_id=channel.id,
-                        item_id=item.id,
-                        customer_id=customer.id
-                    ).first()
-                else:
-                    existing = SellthroughData.query.filter(
-                        SellthroughData.date == week_date,
-                        SellthroughData.channel_id == channel.id,
-                        SellthroughData.item_id == item.id,
-                        SellthroughData.customer_id.is_(None)
-                    ).first()
-                
-                if existing:
-                    # Update existing record
-                    print(f"  ↻ Updating existing sellthrough data")
-                    existing.units = units
-                    existing.revenues = revenues
-                    existing.stores = stores
-                    existing.oos = oos
-                    existing.brand_id = brand_id
-                    results['updated'] += 1
-                else:
-                    # Create new record
-                    print(f"  ➕ Creating new sellthrough data: {week_date}, {item.essor_code}, {channel.name}")
-                    sellthrough = SellthroughData(
-                        date=week_date,
-                        brand_id=brand_id,
-                        item_id=item.id,
-                        channel_id=channel.id,
-                        customer_id=customer.id if customer else None,
-                        units=units,
-                        revenues=revenues,
-                        stores=stores,
-                        oos=oos
-                    )
-                    db.session.add(sellthrough)
-                    results['created'] += 1
-                
-                results['processed'] += 1
-                
-            except Exception as e:
-                error_msg = f"Row {row_num}: {str(e)}"
-                print(f"  ✗ ERROR: {error_msg}")
-                import traceback
-                traceback_str = traceback.format_exc()
-                print(f"  Traceback: {traceback_str}")
+            
+            # Route to appropriate format processor
+            if csv_format == 'walmart':
+                process_walmart_row(row, row_num, results, dry_run)
+            elif csv_format == 'target':
+                process_target_row(row, row_num, results, dry_run)
+            elif csv_format == 'cvs':
+                process_cvs_row(row, row_num, results, dry_run)
+            elif csv_format == 'kehe':
+                process_kehe_row(row, row_num, results, dry_run)
+            else:
+                error_msg = f"Row {row_num}: Unknown format {csv_format}"
                 results['errors'].append(error_msg)
-                # Save to ImportError table
-                try:
-                    _save_import_error('csv', row, f"{error_msg}\n\n{traceback_str}", row_num)
-                except:
-                    pass  # Don't fail if we can't save the error
+                _save_import_error('csv', row, error_msg, row_num)
                 results['skipped'] += 1
-                if not dry_run:
-                    db.session.rollback()
-                continue
         
         # Commit all changes (only if not dry-run)
         if dry_run:
@@ -844,4 +1156,156 @@ def import_data():
         db.session.rollback()
         flash(f'Error processing CSV file: {str(e)}', 'error')
         return render_template('sellthrough/import.html')
+
+@sellthrough_bp.route('/unlinked')
+@login_required
+def unlinked():
+    """List sellthrough data without item_id and brand_id, grouped by channel_code"""
+    channel_id = request.args.get('channel_id', type=int)
+    
+    # Query for sellthrough data without item_id and brand_id
+    query = SellthroughData.query.filter(
+        SellthroughData.item_id.is_(None),
+        SellthroughData.brand_id.is_(None)
+    )
+    
+    if channel_id:
+        query = query.filter(SellthroughData.channel_id == channel_id)
+    
+    # Get all unlinked data
+    unlinked_data = query.order_by(SellthroughData.channel_id, SellthroughData.channel_code, SellthroughData.date.desc()).all()
+    
+    # Group by channel_code and channel_id (use composite key)
+    grouped_data = {}
+    for data in unlinked_data:
+        channel_code = data.channel_code or 'NO_CODE'
+        # Create a composite key to handle same channel_code in different channels
+        group_key = f"{data.channel_id}_{channel_code}"
+        
+        if group_key not in grouped_data:
+            grouped_data[group_key] = {
+                'channel_code': channel_code,
+                'channel_id': data.channel_id,
+                'channel_name': data.channel.name if data.channel else 'Unknown',
+                'count': 0,
+                'first_date': data.date,
+                'last_date': data.date,
+                'total_revenues': Decimal('0'),
+                'total_units': 0
+            }
+        
+        grouped_data[group_key]['count'] += 1
+        if data.date < grouped_data[group_key]['first_date']:
+            grouped_data[group_key]['first_date'] = data.date
+        if data.date > grouped_data[group_key]['last_date']:
+            grouped_data[group_key]['last_date'] = data.date
+        grouped_data[group_key]['total_revenues'] += data.revenues or Decimal('0')
+        grouped_data[group_key]['total_units'] += data.units or 0
+    
+    # Get channels for filter
+    channels = Channel.query.order_by(Channel.name).all()
+    
+    return render_template('sellthrough/unlinked.html',
+                         grouped_data=grouped_data,
+                         channels=channels,
+                         selected_channel_id=channel_id)
+
+@sellthrough_bp.route('/api/search-items')
+@login_required
+def api_search_items():
+    """API endpoint to search items by code and name"""
+    search_term = request.args.get('q', '').strip()
+    if not search_term:
+        return jsonify([])
+    
+    # Search in essor_code and essor_name
+    search_pattern = f'%{search_term}%'
+    items = Item.query.filter(
+        db.or_(
+            Item.essor_code.ilike(search_pattern),
+            Item.essor_name.ilike(search_pattern)
+        )
+    ).order_by(Item.essor_code).limit(50).all()
+    
+    return jsonify([{
+        'id': item.id,
+        'essor_code': item.essor_code or '',
+        'essor_name': item.essor_name or '',
+        'brand_id': item.brand_id,
+        'brand_name': item.brand.name if item.brand else '',
+        'display': f"{item.essor_code or 'N/A'} - {item.essor_name or 'N/A'}"
+    } for item in items])
+
+@sellthrough_bp.route('/link-item', methods=['POST'])
+@login_required
+def link_item():
+    """Link a channel_code to an item - updates sellthrough_data and creates channel_item"""
+    try:
+        data = request.get_json()
+        channel_code = data.get('channel_code')
+        item_id = data.get('item_id')
+        channel_id = data.get('channel_id')
+        
+        if not channel_code or not item_id or not channel_id:
+            return jsonify({'error': 'Missing required fields'}), 400
+        
+        # Get the item to get brand_id
+        item = Item.query.get(item_id)
+        if not item:
+            return jsonify({'error': 'Item not found'}), 404
+        
+        brand_id = item.brand_id
+        
+        # Get all sellthrough_data entries with this channel_code and channel_id that don't have item_id
+        sellthrough_entries = SellthroughData.query.filter(
+            SellthroughData.channel_code == channel_code,
+            SellthroughData.channel_id == channel_id,
+            SellthroughData.item_id.is_(None),
+            SellthroughData.brand_id.is_(None)
+        ).all()
+        
+        if not sellthrough_entries:
+            return jsonify({'error': 'No unlinked sellthrough data found for this channel_code'}), 404
+        
+        # Check if channel_item already exists
+        channel_item = ChannelItem.query.filter_by(
+            channel_id=channel_id,
+            item_id=item_id
+        ).first()
+        
+        # Get channel_name from item
+        channel_name = item.essor_name or item.essor_code or channel_code
+        
+        # If channel_item doesn't exist, create it
+        if not channel_item:
+            channel_item = ChannelItem(
+                channel_id=channel_id,
+                item_id=item_id,
+                channel_code=channel_code,
+                channel_name=channel_name
+            )
+            db.session.add(channel_item)
+        else:
+            # Update channel_code and channel_name if they're different
+            if channel_item.channel_code != channel_code:
+                channel_item.channel_code = channel_code
+            if channel_item.channel_name != channel_name:
+                channel_item.channel_name = channel_name
+        
+        # Update all sellthrough_data entries
+        for entry in sellthrough_entries:
+            entry.item_id = item_id
+            entry.brand_id = brand_id
+        
+        db.session.commit()
+        
+        return jsonify({
+            'success': True,
+            'updated_count': len(sellthrough_entries),
+            'message': f'Successfully linked {len(sellthrough_entries)} entries to item {item.essor_code}'
+        })
+    
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
 

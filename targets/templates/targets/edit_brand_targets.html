@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block page_title_text %}✏️ Edit Targets - {{ brand.name }}{% endblock %}
+
+{% block extra_styles %}
+    .form-container {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .form-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .year-selector {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .year-selector select {
+        padding: 10px 15px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    
+    .year-selector select:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .targets-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+    
+    .targets-table thead {
+        background: #667eea;
+        color: white;
+        position: sticky;
+        top: 0;
+    }
+    
+    .targets-table th {
+        padding: 12px;
+        text-align: center;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+    
+    .targets-table th:first-child {
+        text-align: left;
+        position: sticky;
+        left: 0;
+        background: #667eea;
+        z-index: 2;
+    }
+    
+    .targets-table td {
+        padding: 8px;
+        border-bottom: 1px solid #e2e8f0;
+        text-align: center;
+    }
+    
+    .targets-table td:first-child {
+        text-align: left;
+        font-weight: 600;
+        position: sticky;
+        left: 0;
+        background: white;
+        z-index: 1;
+    }
+    
+    .targets-table tbody tr:hover td:first-child {
+        background: #f7fafc;
+    }
+    
+    .targets-table tbody tr:hover {
+        background: #f7fafc;
+    }
+    
+    .targets-table input[type="number"] {
+        width: 100%;
+        padding: 8px;
+        border: 2px solid #e2e8f0;
+        border-radius: 4px;
+        font-size: 14px;
+        text-align: right;
+    }
+    
+    .targets-table input[type="number"]:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .form-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 2px solid #e2e8f0;
+    }
+    
+    .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-primary {
+        background: #667eea;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background: #e2e8f0;
+        color: #4a5568;
+    }
+    
+    .btn-secondary:hover {
+        background: #cbd5e0;
+    }
+    
+    .scroll-container {
+        overflow-x: auto;
+        max-width: 100%;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="form-container">
+        <div class="form-header">
+            <h2 style="margin: 0; color: #2d3748;">Edit Targets for {{ brand.name }}</h2>
+            <div class="year-selector">
+                <label for="year-select" style="font-weight: 600;">Year:</label>
+                <select id="year-select" onchange="window.location.href='{{ url_for('targets.edit_brand_targets', brand_id=brand.id) }}?year=' + this.value">
+                    {% for y in available_years %}
+                    <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        <form method="POST">
+            <input type="hidden" name="year" value="{{ year }}">
+            
+            <div class="scroll-container">
+                <table class="targets-table">
+                    <thead>
+                        <tr>
+                            <th>Channel</th>
+                            {% for month_name in month_names %}
+                            <th>{{ month_name[:3] }}</th>
+                            {% endfor %}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for channel in channels %}
+                        <tr>
+                            <td>{{ channel.name }}</td>
+                            {% for month in range(1, 13) %}
+                            <td>
+                                <input type="number" 
+                                       name="revenue_{{ channel.id }}_{{ month }}" 
+                                       value="{{ targets_dict.get((channel.id, month), '') }}" 
+                                       step="0.01" 
+                                       min="0" 
+                                       placeholder="0.00">
+                            </td>
+                            {% endfor %}
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <div class="form-actions">
+                <button type="submit" class="btn btn-primary">💾 Save Targets</button>
+                <a href="{{ url_for('targets.brands_list') }}" class="btn btn-secondary">Cancel</a>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+

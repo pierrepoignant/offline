@@ -336,25 +336,15 @@ def delete_channel_item(channel_id, channel_item_id):
 @login_required
 def customers_list():
     """List all channel customers"""
-    from models import SellthroughData, NetsuiteData, db
+    from models import SellthroughData, NetsuiteData, FaireData, db
     from sqlalchemy import func, extract
     
     # Get filter parameters
     channel_id = request.args.get('channel_id', type=int)
     customer_type_id = request.args.get('customer_type_id', type=int)
     brand_id = request.args.get('brand_id', type=int)
-    
-    # Build query with filters
-    query = ChannelCustomer.query.join(Channel).outerjoin(Brand)
-    
-    if channel_id:
-        query = query.filter(ChannelCustomer.channel_id == channel_id)
-    if customer_type_id:
-        query = query.filter(ChannelCustomer.customer_type_id == customer_type_id)
-    if brand_id:
-        query = query.filter(ChannelCustomer.brand_id == brand_id)
-    
-    customers = query.all()
+    page = request.args.get('page', 1, type=int)
+    per_page = 30
     
     # Get all options for filters
     channels = Channel.query.order_by(Channel.name).all()
@@ -362,115 +352,176 @@ def customers_list():
     # Only show brands that have at least one customer
     brands = Brand.query.join(ChannelCustomer).distinct().order_by(Brand.name).all()
     
-    # Calculate revenues for each customer (from both SellthroughData and NetsuiteData)
+    # Don't load customers until a channel is selected
+    customers = []
     customer_revenues = {}
-    for customer in customers:
-        # Get 2024 revenues from SellthroughData
-        rev_2024_sellthrough = db.session.query(
-            func.coalesce(func.sum(SellthroughData.revenues), 0)
-        ).filter(
-            SellthroughData.customer_id == customer.id,
-            extract('year', SellthroughData.date) == 2024
-        ).scalar() or 0
-        
-        # Get 2024 revenues from NetsuiteData
-        rev_2024_netsuite = db.session.query(
-            func.coalesce(func.sum(NetsuiteData.revenues), 0)
-        ).filter(
-            NetsuiteData.customer_id == customer.id,
-            extract('year', NetsuiteData.date) == 2024
-        ).scalar() or 0
-        
-        # Get 2025 revenues from SellthroughData
-        rev_2025_sellthrough = db.session.query(
-            func.coalesce(func.sum(SellthroughData.revenues), 0)
-        ).filter(
-            SellthroughData.customer_id == customer.id,
-            extract('year', SellthroughData.date) == 2025
-        ).scalar() or 0
-        
-        # Get 2025 revenues from NetsuiteData
-        rev_2025_netsuite = db.session.query(
-            func.coalesce(func.sum(NetsuiteData.revenues), 0)
-        ).filter(
-            NetsuiteData.customer_id == customer.id,
-            extract('year', NetsuiteData.date) == 2025
-        ).scalar() or 0
-        
-        # Combine revenues from both sources
-        rev_2024 = float(rev_2024_sellthrough) + float(rev_2024_netsuite)
-        rev_2025 = float(rev_2025_sellthrough) + float(rev_2025_netsuite)
-        
-        # Calculate YoY growth
-        yoy_growth = None
-        if rev_2024 > 0:
-            yoy_growth = ((rev_2025 - rev_2024) / rev_2024) * 100
-        elif rev_2025 > 0:
-            yoy_growth = 100  # Infinite growth (from 0 to positive)
-        else:
-            yoy_growth = 0  # No growth (both 0)
-        
-        customer_revenues[customer.id] = {
-            '2024': rev_2024,
-            '2025': rev_2025,
-            'yoy_growth': yoy_growth
-        }
+    pagination = None
     
-    # Sort customers by 2025 revenues (decreasing)
-    customers_sorted = sorted(customers, key=lambda c: customer_revenues[c.id]['2025'], reverse=True)
+    if channel_id:
+        # Build query with filters
+        query = ChannelCustomer.query.join(Channel).outerjoin(Brand)
+        
+        query = query.filter(ChannelCustomer.channel_id == channel_id)
+        if customer_type_id:
+            query = query.filter(ChannelCustomer.customer_type_id == customer_type_id)
+        if brand_id:
+            query = query.filter(ChannelCustomer.brand_id == brand_id)
+        
+        # Paginate the query
+        pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+        customers = pagination.items
+        
+        # Check if this is Faire channel (id=11)
+        is_faire_channel = (channel_id == 11)
+        
+        # Calculate revenues for each customer
+        for customer in customers:
+            if is_faire_channel:
+                # For Faire channel, use FaireData
+                rev_2024 = db.session.query(
+                    func.coalesce(func.sum(FaireData.revenues), 0)
+                ).filter(
+                    FaireData.customer_id == customer.id,
+                    extract('year', FaireData.date) == 2024
+                ).scalar() or 0
+                
+                rev_2025 = db.session.query(
+                    func.coalesce(func.sum(FaireData.revenues), 0)
+                ).filter(
+                    FaireData.customer_id == customer.id,
+                    extract('year', FaireData.date) == 2025
+                ).scalar() or 0
+            else:
+                # For other channels, use SellthroughData and NetsuiteData
+                # Get 2024 revenues from SellthroughData
+                rev_2024_sellthrough = db.session.query(
+                    func.coalesce(func.sum(SellthroughData.revenues), 0)
+                ).filter(
+                    SellthroughData.customer_id == customer.id,
+                    extract('year', SellthroughData.date) == 2024
+                ).scalar() or 0
+                
+                # Get 2024 revenues from NetsuiteData
+                rev_2024_netsuite = db.session.query(
+                    func.coalesce(func.sum(NetsuiteData.revenues), 0)
+                ).filter(
+                    NetsuiteData.customer_id == customer.id,
+                    extract('year', NetsuiteData.date) == 2024
+                ).scalar() or 0
+                
+                # Get 2025 revenues from SellthroughData
+                rev_2025_sellthrough = db.session.query(
+                    func.coalesce(func.sum(SellthroughData.revenues), 0)
+                ).filter(
+                    SellthroughData.customer_id == customer.id,
+                    extract('year', SellthroughData.date) == 2025
+                ).scalar() or 0
+                
+                # Get 2025 revenues from NetsuiteData
+                rev_2025_netsuite = db.session.query(
+                    func.coalesce(func.sum(NetsuiteData.revenues), 0)
+                ).filter(
+                    NetsuiteData.customer_id == customer.id,
+                    extract('year', NetsuiteData.date) == 2025
+                ).scalar() or 0
+                
+                # Combine revenues from both sources
+                rev_2024 = float(rev_2024_sellthrough) + float(rev_2024_netsuite)
+                rev_2025 = float(rev_2025_sellthrough) + float(rev_2025_netsuite)
+            
+            # Calculate YoY growth
+            yoy_growth = None
+            if rev_2024 > 0:
+                yoy_growth = ((rev_2025 - rev_2024) / rev_2024) * 100
+            elif rev_2025 > 0:
+                yoy_growth = 100  # Infinite growth (from 0 to positive)
+            else:
+                yoy_growth = 0  # No growth (both 0)
+            
+            customer_revenues[customer.id] = {
+                '2024': float(rev_2024),
+                '2025': float(rev_2025),
+                'yoy_growth': yoy_growth
+            }
+        
+        # Sort customers by 2025 revenues (decreasing)
+        customers = sorted(customers, key=lambda c: customer_revenues[c.id]['2025'], reverse=True)
     
     return render_template('core/customers_list.html', 
-                         customers=customers_sorted,
+                         customers=customers,
                          customer_revenues=customer_revenues,
                          channels=channels,
                          customer_types=customer_types,
                          brands=brands,
                          selected_channel_id=channel_id,
                          selected_customer_type_id=customer_type_id,
-                         selected_brand_id=brand_id)
+                         selected_brand_id=brand_id,
+                         pagination=pagination)
 
 @core_bp.route('/customers/<int:customer_id>')
 @login_required
 def customer_detail(customer_id):
     """View customer detail with tabs"""
-    from models import SellthroughData, NetsuiteData, db
+    from models import SellthroughData, NetsuiteData, FaireData, db
     from sqlalchemy import func, extract
     
     customer = ChannelCustomer.query.get_or_404(customer_id)
     
+    # Check if this is Faire channel (id=11)
+    is_faire_channel = (customer.channel_id == 11)
+    
     # Calculate total revenues for 2024 and 2025
-    # From SellthroughData
-    rev_2024_sellthrough = db.session.query(
-        func.coalesce(func.sum(SellthroughData.revenues), 0)
-    ).filter(
-        SellthroughData.customer_id == customer_id,
-        extract('year', SellthroughData.date) == 2024
-    ).scalar() or 0
-    
-    rev_2025_sellthrough = db.session.query(
-        func.coalesce(func.sum(SellthroughData.revenues), 0)
-    ).filter(
-        SellthroughData.customer_id == customer_id,
-        extract('year', SellthroughData.date) == 2025
-    ).scalar() or 0
-    
-    # From NetsuiteData
-    rev_2024_netsuite = db.session.query(
-        func.coalesce(func.sum(NetsuiteData.revenues), 0)
-    ).filter(
-        NetsuiteData.customer_id == customer_id,
-        extract('year', NetsuiteData.date) == 2024
-    ).scalar() or 0
-    
-    rev_2025_netsuite = db.session.query(
-        func.coalesce(func.sum(NetsuiteData.revenues), 0)
-    ).filter(
-        NetsuiteData.customer_id == customer_id,
-        extract('year', NetsuiteData.date) == 2025
-    ).scalar() or 0
-    
-    total_rev_2024 = float(rev_2024_sellthrough) + float(rev_2024_netsuite)
-    total_rev_2025 = float(rev_2025_sellthrough) + float(rev_2025_netsuite)
+    if is_faire_channel:
+        # For Faire channel, use FaireData
+        total_rev_2024 = db.session.query(
+            func.coalesce(func.sum(FaireData.revenues), 0)
+        ).filter(
+            FaireData.customer_id == customer_id,
+            extract('year', FaireData.date) == 2024
+        ).scalar() or 0
+        
+        total_rev_2025 = db.session.query(
+            func.coalesce(func.sum(FaireData.revenues), 0)
+        ).filter(
+            FaireData.customer_id == customer_id,
+            extract('year', FaireData.date) == 2025
+        ).scalar() or 0
+        
+        total_rev_2024 = float(total_rev_2024)
+        total_rev_2025 = float(total_rev_2025)
+    else:
+        # From SellthroughData
+        rev_2024_sellthrough = db.session.query(
+            func.coalesce(func.sum(SellthroughData.revenues), 0)
+        ).filter(
+            SellthroughData.customer_id == customer_id,
+            extract('year', SellthroughData.date) == 2024
+        ).scalar() or 0
+        
+        rev_2025_sellthrough = db.session.query(
+            func.coalesce(func.sum(SellthroughData.revenues), 0)
+        ).filter(
+            SellthroughData.customer_id == customer_id,
+            extract('year', SellthroughData.date) == 2025
+        ).scalar() or 0
+        
+        # From NetsuiteData
+        rev_2024_netsuite = db.session.query(
+            func.coalesce(func.sum(NetsuiteData.revenues), 0)
+        ).filter(
+            NetsuiteData.customer_id == customer_id,
+            extract('year', NetsuiteData.date) == 2024
+        ).scalar() or 0
+        
+        rev_2025_netsuite = db.session.query(
+            func.coalesce(func.sum(NetsuiteData.revenues), 0)
+        ).filter(
+            NetsuiteData.customer_id == customer_id,
+            extract('year', NetsuiteData.date) == 2025
+        ).scalar() or 0
+        
+        total_rev_2024 = float(rev_2024_sellthrough) + float(rev_2024_netsuite)
+        total_rev_2025 = float(rev_2025_sellthrough) + float(rev_2025_netsuite)
     
     return render_template('core/customer_detail.html', 
                          customer=customer,
@@ -481,65 +532,94 @@ def customer_detail(customer_id):
 @login_required
 def api_customer_assortment(customer_id):
     """API endpoint for customer assortment data"""
-    from models import Item, SellthroughData, NetsuiteData, db
+    from models import Item, SellthroughData, NetsuiteData, FaireData, db
     from sqlalchemy import func, extract
     
     customer = ChannelCustomer.query.get_or_404(customer_id)
     
-    # Get all items that have data for this customer
-    # Query from SellthroughData
-    sellthrough_items_2024 = db.session.query(
-        SellthroughData.item_id,
-        func.sum(SellthroughData.revenues).label('revenues')
-    ).filter(
-        SellthroughData.customer_id == customer_id,
-        extract('year', SellthroughData.date) == 2024
-    ).group_by(SellthroughData.item_id).all()
+    # Check if this is Faire channel (id=11)
+    is_faire_channel = (customer.channel_id == 11)
     
-    sellthrough_items_2025 = db.session.query(
-        SellthroughData.item_id,
-        func.sum(SellthroughData.revenues).label('revenues')
-    ).filter(
-        SellthroughData.customer_id == customer_id,
-        extract('year', SellthroughData.date) == 2025
-    ).group_by(SellthroughData.item_id).all()
-    
-    # Query from NetsuiteData
-    netsuite_items_2024 = db.session.query(
-        NetsuiteData.item_id,
-        func.sum(NetsuiteData.revenues).label('revenues')
-    ).filter(
-        NetsuiteData.customer_id == customer_id,
-        extract('year', NetsuiteData.date) == 2024
-    ).group_by(NetsuiteData.item_id).all()
-    
-    netsuite_items_2025 = db.session.query(
-        NetsuiteData.item_id,
-        func.sum(NetsuiteData.revenues).label('revenues')
-    ).filter(
-        NetsuiteData.customer_id == customer_id,
-        extract('year', NetsuiteData.date) == 2025
-    ).group_by(NetsuiteData.item_id).all()
-    
-    # Combine revenues by item_id
     revenues_2024 = {}
     revenues_2025 = {}
     
-    for row in sellthrough_items_2024:
-        item_id = row.item_id
-        revenues_2024[item_id] = revenues_2024.get(item_id, 0) + float(row.revenues or 0)
-    
-    for row in netsuite_items_2024:
-        item_id = row.item_id
-        revenues_2024[item_id] = revenues_2024.get(item_id, 0) + float(row.revenues or 0)
-    
-    for row in sellthrough_items_2025:
-        item_id = row.item_id
-        revenues_2025[item_id] = revenues_2025.get(item_id, 0) + float(row.revenues or 0)
-    
-    for row in netsuite_items_2025:
-        item_id = row.item_id
-        revenues_2025[item_id] = revenues_2025.get(item_id, 0) + float(row.revenues or 0)
+    if is_faire_channel:
+        # For Faire channel, use FaireData
+        faire_items_2024 = db.session.query(
+            FaireData.item_id,
+            func.sum(FaireData.revenues).label('revenues')
+        ).filter(
+            FaireData.customer_id == customer_id,
+            extract('year', FaireData.date) == 2024
+        ).group_by(FaireData.item_id).all()
+        
+        faire_items_2025 = db.session.query(
+            FaireData.item_id,
+            func.sum(FaireData.revenues).label('revenues')
+        ).filter(
+            FaireData.customer_id == customer_id,
+            extract('year', FaireData.date) == 2025
+        ).group_by(FaireData.item_id).all()
+        
+        for row in faire_items_2024:
+            item_id = row.item_id
+            revenues_2024[item_id] = float(row.revenues or 0)
+        
+        for row in faire_items_2025:
+            item_id = row.item_id
+            revenues_2025[item_id] = float(row.revenues or 0)
+    else:
+        # Get all items that have data for this customer
+        # Query from SellthroughData
+        sellthrough_items_2024 = db.session.query(
+            SellthroughData.item_id,
+            func.sum(SellthroughData.revenues).label('revenues')
+        ).filter(
+            SellthroughData.customer_id == customer_id,
+            extract('year', SellthroughData.date) == 2024
+        ).group_by(SellthroughData.item_id).all()
+        
+        sellthrough_items_2025 = db.session.query(
+            SellthroughData.item_id,
+            func.sum(SellthroughData.revenues).label('revenues')
+        ).filter(
+            SellthroughData.customer_id == customer_id,
+            extract('year', SellthroughData.date) == 2025
+        ).group_by(SellthroughData.item_id).all()
+        
+        # Query from NetsuiteData
+        netsuite_items_2024 = db.session.query(
+            NetsuiteData.item_id,
+            func.sum(NetsuiteData.revenues).label('revenues')
+        ).filter(
+            NetsuiteData.customer_id == customer_id,
+            extract('year', NetsuiteData.date) == 2024
+        ).group_by(NetsuiteData.item_id).all()
+        
+        netsuite_items_2025 = db.session.query(
+            NetsuiteData.item_id,
+            func.sum(NetsuiteData.revenues).label('revenues')
+        ).filter(
+            NetsuiteData.customer_id == customer_id,
+            extract('year', NetsuiteData.date) == 2025
+        ).group_by(NetsuiteData.item_id).all()
+        
+        # Combine revenues by item_id
+        for row in sellthrough_items_2024:
+            item_id = row.item_id
+            revenues_2024[item_id] = revenues_2024.get(item_id, 0) + float(row.revenues or 0)
+        
+        for row in netsuite_items_2024:
+            item_id = row.item_id
+            revenues_2024[item_id] = revenues_2024.get(item_id, 0) + float(row.revenues or 0)
+        
+        for row in sellthrough_items_2025:
+            item_id = row.item_id
+            revenues_2025[item_id] = revenues_2025.get(item_id, 0) + float(row.revenues or 0)
+        
+        for row in netsuite_items_2025:
+            item_id = row.item_id
+            revenues_2025[item_id] = revenues_2025.get(item_id, 0) + float(row.revenues or 0)
     
     # Get all unique item IDs
     all_item_ids = set(revenues_2024.keys()) | set(revenues_2025.keys())
@@ -566,6 +646,13 @@ def api_customer_assortment(customer_id):
             if item.asin_obj and item.asin_obj.img_url:
                 asin_img_url = item.asin_obj.img_url
             
+            # Get ASIN status (prefer ASIN status, fallback to item status)
+            asin_status = None
+            if item.asin_obj and item.asin_obj.status:
+                asin_status = item.asin_obj.status
+            elif item.status:
+                asin_status = item.status
+            
             items_data.append({
                 'item_id': item_id,
                 'essor_code': item.essor_code or '',
@@ -573,7 +660,8 @@ def api_customer_assortment(customer_id):
                 'revenues_2024': rev_2024,
                 'revenues_2025': rev_2025,
                 'yoy_growth': yoy_growth,
-                'asin_img_url': asin_img_url
+                'asin_img_url': asin_img_url,
+                'asin_status': asin_status
             })
     
     # Sort by revenues_2025 DESC
@@ -585,35 +673,49 @@ def api_customer_assortment(customer_id):
 @login_required
 def api_customer_monthly_revenues(customer_id):
     """API endpoint for customer monthly revenues"""
-    from models import SellthroughData, NetsuiteData, db
+    from models import SellthroughData, NetsuiteData, FaireData, db
     from sqlalchemy import func, extract
     from datetime import datetime
     
     customer = ChannelCustomer.query.get_or_404(customer_id)
     
+    # Check if this is Faire channel (id=11)
+    is_faire_channel = (customer.channel_id == 11)
+    
     # Get monthly revenues for 2024 and 2025
     months = []
     for year in [2024, 2025]:
         for month in range(1, 13):
-            # Query SellthroughData
-            sellthrough_rev = db.session.query(
-                func.coalesce(func.sum(SellthroughData.revenues), 0)
-            ).filter(
-                SellthroughData.customer_id == customer_id,
-                extract('year', SellthroughData.date) == year,
-                extract('month', SellthroughData.date) == month
-            ).scalar() or 0
-            
-            # Query NetsuiteData
-            netsuite_rev = db.session.query(
-                func.coalesce(func.sum(NetsuiteData.revenues), 0)
-            ).filter(
-                NetsuiteData.customer_id == customer_id,
-                extract('year', NetsuiteData.date) == year,
-                extract('month', NetsuiteData.date) == month
-            ).scalar() or 0
-            
-            total_rev = float(sellthrough_rev) + float(netsuite_rev)
+            if is_faire_channel:
+                # For Faire channel, use FaireData
+                total_rev = db.session.query(
+                    func.coalesce(func.sum(FaireData.revenues), 0)
+                ).filter(
+                    FaireData.customer_id == customer_id,
+                    extract('year', FaireData.date) == year,
+                    extract('month', FaireData.date) == month
+                ).scalar() or 0
+                total_rev = float(total_rev)
+            else:
+                # Query SellthroughData
+                sellthrough_rev = db.session.query(
+                    func.coalesce(func.sum(SellthroughData.revenues), 0)
+                ).filter(
+                    SellthroughData.customer_id == customer_id,
+                    extract('year', SellthroughData.date) == year,
+                    extract('month', SellthroughData.date) == month
+                ).scalar() or 0
+                
+                # Query NetsuiteData
+                netsuite_rev = db.session.query(
+                    func.coalesce(func.sum(NetsuiteData.revenues), 0)
+                ).filter(
+                    NetsuiteData.customer_id == customer_id,
+                    extract('year', NetsuiteData.date) == year,
+                    extract('month', NetsuiteData.date) == month
+                ).scalar() or 0
+                
+                total_rev = float(sellthrough_rev) + float(netsuite_rev)
             
             months.append({
                 'year': year,
@@ -623,6 +725,268 @@ def api_customer_monthly_revenues(customer_id):
             })
     
     return jsonify({'months': months})
+
+@core_bp.route('/customers/assortment-by-channel')
+@login_required
+def customers_assortment_by_channel():
+    """View assortment by channel and brand for all customers"""
+    channels = Channel.query.order_by(Channel.name).all()
+    brands = Brand.query.order_by(Brand.name).all()
+    
+    return render_template('core/customers_assortment_by_channel.html', 
+                         channels=channels,
+                         brands=brands)
+
+@core_bp.route('/customers/api/assortment-by-channel')
+@login_required
+def api_assortment_by_channel():
+    """API endpoint for assortment filtered by channel and brand"""
+    from models import Item, NetsuiteData, FaireData, Asin, db
+    from sqlalchemy import func, extract, or_, case
+    import math
+    import traceback
+    
+    print(f"[ASSORTMENT API] Request received: {request.args}")
+    
+    channel_id = request.args.get('channel_id', type=int)
+    brand_id = request.args.get('brand_id', type=int)
+    
+    print(f"[ASSORTMENT API] channel_id={channel_id}, brand_id={brand_id}")
+    
+    # Get sorting parameters
+    sort_by = request.args.get('sort_by', 'revenues_2025')
+    sort_order = request.args.get('sort_order', 'desc').lower()
+    
+    # Get pagination parameters
+    page = request.args.get('page', 1, type=int)
+    per_page = 30
+    
+    print(f"[ASSORTMENT API] sort_by={sort_by}, sort_order={sort_order}, page={page}")
+    
+    # Validate sort_by
+    if sort_by not in ['revenues_2024', 'revenues_2025']:
+        sort_by = 'revenues_2025'
+    
+    # Validate sort_order
+    if sort_order not in ['asc', 'desc']:
+        sort_order = 'desc'
+    
+    if not channel_id or not brand_id:
+        print(f"[ASSORTMENT API] ERROR: Missing channel_id or brand_id")
+        return jsonify({'error': 'channel_id and brand_id are required'}), 400
+    
+    try:
+        # Verify channel and brand exist
+        Channel.query.get_or_404(channel_id)
+        Brand.query.get_or_404(brand_id)
+        print(f"[ASSORTMENT API] Channel and Brand verified")
+    except Exception as e:
+        print(f"[ASSORTMENT API] ERROR verifying channel/brand: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Channel or Brand not found: {str(e)}'}), 404
+    
+    # Get all customers matching the channel and brand
+    try:
+        customers = ChannelCustomer.query.filter_by(
+            channel_id=channel_id,
+            brand_id=brand_id
+        ).all()
+        print(f"[ASSORTMENT API] Found {len(customers)} customers")
+    except Exception as e:
+        print(f"[ASSORTMENT API] ERROR querying customers: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Error querying customers: {str(e)}'}), 500
+    
+    if not customers:
+        print(f"[ASSORTMENT API] No customers found, returning empty result")
+        return jsonify({
+            'items': [],
+            'pagination': {
+                'total': 0,
+                'page': page,
+                'per_page': per_page,
+                'total_pages': 0
+            }
+        })
+    
+    customer_ids = [c.id for c in customers]
+    print(f"[ASSORTMENT API] Customer IDs: {customer_ids}")
+    
+    try:
+        # Check if this is Faire channel (id=11)
+        is_faire_channel = (channel_id == 11)
+        
+        # Single SQL query with joins to get all data at once
+        print(f"[ASSORTMENT API] Executing single SQL query with joins... (Faire channel: {is_faire_channel})")
+        
+        from sqlalchemy import case
+        
+        if is_faire_channel:
+            # For Faire channel, use FaireData
+            query = db.session.query(
+                Item.id.label('item_id'),
+                Item.essor_code,
+                Item.essor_name,
+                Item.status.label('item_status'),
+                Asin.img_url.label('asin_img_url'),
+                Asin.status.label('asin_status'),
+                func.coalesce(
+                    func.sum(
+                        case(
+                            (extract('year', FaireData.date) == 2024, FaireData.revenues),
+                            else_=0
+                        )
+                    ),
+                    0
+                ).label('revenues_2024'),
+                func.coalesce(
+                    func.sum(
+                        case(
+                            (extract('year', FaireData.date) == 2025, FaireData.revenues),
+                            else_=0
+                        )
+                    ),
+                    0
+                ).label('revenues_2025')
+            ).join(
+                FaireData, Item.id == FaireData.item_id
+            ).outerjoin(
+                Asin, Item.asin_id == Asin.id
+            ).filter(
+                FaireData.customer_id.in_(customer_ids),
+                FaireData.brand_id == brand_id
+            ).group_by(
+                Item.id,
+                Item.essor_code,
+                Item.essor_name,
+                Item.status,
+                Asin.img_url,
+                Asin.status
+            )
+        else:
+            # For other channels, use NetsuiteData
+            query = db.session.query(
+                Item.id.label('item_id'),
+                Item.essor_code,
+                Item.essor_name,
+                Item.status.label('item_status'),
+                Asin.img_url.label('asin_img_url'),
+                Asin.status.label('asin_status'),
+                func.coalesce(
+                    func.sum(
+                        case(
+                            (extract('year', NetsuiteData.date) == 2024, NetsuiteData.revenues),
+                            else_=0
+                        )
+                    ),
+                    0
+                ).label('revenues_2024'),
+                func.coalesce(
+                    func.sum(
+                        case(
+                            (extract('year', NetsuiteData.date) == 2025, NetsuiteData.revenues),
+                            else_=0
+                        )
+                    ),
+                    0
+                ).label('revenues_2025')
+            ).join(
+                NetsuiteData, Item.id == NetsuiteData.item_id
+            ).outerjoin(
+                Asin, Item.asin_id == Asin.id
+            ).filter(
+                NetsuiteData.customer_id.in_(customer_ids),
+                or_(NetsuiteData.channel_id == channel_id, NetsuiteData.channel_id.is_(None)),
+                NetsuiteData.brand_id == brand_id
+            ).group_by(
+                Item.id,
+                Item.essor_code,
+                Item.essor_name,
+                Item.status,
+                Asin.img_url,
+                Asin.status
+            )
+        
+        print(f"[ASSORTMENT API] Query built, executing...")
+        results = query.all()
+        print(f"[ASSORTMENT API] Query returned {len(results)} items")
+        
+        # Build items data from query results
+        items_data = []
+        for row in results:
+            rev_2024 = float(row.revenues_2024 or 0)
+            rev_2025 = float(row.revenues_2025 or 0)
+            
+            # Only include items with revenue in at least one year
+            if rev_2024 == 0 and rev_2025 == 0:
+                continue
+            
+            # Calculate YoY growth percentage
+            yoy_growth = None
+            if rev_2024 > 0:
+                yoy_growth = ((rev_2025 - rev_2024) / rev_2024) * 100
+            elif rev_2025 > 0:
+                yoy_growth = 100  # Infinite growth (from 0 to positive)
+            else:
+                yoy_growth = 0  # No growth (both 0)
+            
+            # Get ASIN status (prefer ASIN status, fallback to item status)
+            asin_status = row.asin_status if row.asin_status else (row.item_status if row.item_status else None)
+            
+            items_data.append({
+                'item_id': row.item_id,
+                'essor_code': row.essor_code or '',
+                'essor_name': row.essor_name or '',
+                'revenues_2024': rev_2024,
+                'revenues_2025': rev_2025,
+                'yoy_growth': yoy_growth,
+                'asin_img_url': row.asin_img_url,
+                'asin_status': asin_status
+            })
+        
+        print(f"[ASSORTMENT API] Built {len(items_data)} items (filtered to items with revenue)")
+        
+        # Sort based on sort_by and sort_order
+        reverse_sort = (sort_order == 'desc')
+        items_data.sort(key=lambda x: x.get(sort_by, 0), reverse=reverse_sort)
+        print(f"[ASSORTMENT API] Sorted by {sort_by} {sort_order}")
+        
+        # Pagination
+        total_items = len(items_data)
+        total_pages = math.ceil(total_items / per_page) if total_items > 0 else 0
+        
+        # Validate page number
+        if page < 1:
+            page = 1
+        elif page > total_pages and total_pages > 0:
+            page = total_pages
+        
+        # Get paginated items
+        start_idx = (page - 1) * per_page
+        end_idx = start_idx + per_page
+        paginated_items = items_data[start_idx:end_idx]
+        
+        print(f"[ASSORTMENT API] Returning {len(paginated_items)} items (page {page} of {total_pages})")
+        
+        response = {
+            'items': paginated_items,
+            'pagination': {
+                'total': total_items,
+                'page': page,
+                'per_page': per_page,
+                'total_pages': total_pages
+            }
+        }
+        
+        return jsonify(response)
+        
+    except Exception as e:
+        print(f"[ASSORTMENT API] ERROR: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': f'Error querying data: {str(e)}'}), 500
 
 # ==================== ASIN Management ====================
 

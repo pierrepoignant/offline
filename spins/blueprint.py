@@ -269,6 +269,9 @@ def api_chart_data():
         elif time_period == 'year_to_date':
             start_date = datetime(today.year, 1, 1).date()
             end_date = today
+        elif time_period == 'since_jan_2024':
+            start_date = datetime(2024, 1, 1).date()
+            end_date = today
         elif time_period == 'custom':
             if date_from:
                 start_date = datetime.strptime(date_from, '%Y-%m-%d').date()

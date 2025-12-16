@@ -13,9 +13,35 @@
     
     .filters-form {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        grid-template-columns: repeat(4, 1fr);
         gap: 15px;
         align-items: end;
+    }
+    
+    .filter-group-search {
+        grid-column: span 2;
+    }
+    
+    .filter-group-button {
+        grid-column: span 1;
+    }
+    
+    @media (max-width: 1200px) {
+        .filters-form {
+            grid-template-columns: repeat(3, 1fr);
+        }
+        .filter-group-search {
+            grid-column: span 3;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .filters-form {
+            grid-template-columns: 1fr;
+        }
+        .filter-group-search {
+            grid-column: span 1;
+        }
     }
     
     .filter-group {
@@ -30,14 +56,16 @@
         font-size: 0.875rem;
     }
     
-    .filter-group select {
+    .filter-group select,
+    .filter-group input[type="text"] {
         padding: 10px;
         border: 2px solid #e2e8f0;
         border-radius: 6px;
         font-size: 0.875rem;
     }
     
-    .filter-group select:focus {
+    .filter-group select:focus,
+    .filter-group input[type="text"]:focus {
         outline: none;
         border-color: #667eea;
     }
@@ -59,9 +87,21 @@
     }
     
     .tickets-container {
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
         gap: 20px;
+    }
+    
+    @media (max-width: 1200px) {
+        .tickets-container {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .tickets-container {
+            grid-template-columns: 1fr;
+        }
     }
     
     .ticket-card {
@@ -71,6 +111,7 @@
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         border-left: 4px solid #667eea;
         transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
     }
     
     .ticket-card:hover {
@@ -100,8 +141,8 @@
     
     .ticket-card-meta {
         display: flex;
-        flex-wrap: wrap;
-        gap: 15px;
+        flex-direction: column;
+        gap: 10px;
         margin-bottom: 15px;
         font-size: 0.875rem;
         color: #718096;
@@ -125,6 +166,12 @@
         font-size: 0.75rem;
         font-weight: 600;
         text-transform: uppercase;
+        cursor: pointer;
+        transition: opacity 0.2s;
+    }
+    
+    .status-badge:hover {
+        opacity: 0.8;
     }
     
     .status-badge.opened {
@@ -147,11 +194,298 @@
     .btn-link:hover {
         text-decoration: underline;
     }
+    
+    /* Overlay styles */
+    .overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        overflow-y: auto;
+    }
+    
+    .overlay.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    
+    .overlay-content {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        max-width: 800px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        position: relative;
+    }
+    
+    .overlay-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .overlay-header h2 {
+        margin: 0;
+        color: #2d3748;
+        font-size: 1.5rem;
+    }
+    
+    .close-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #718096;
+        cursor: pointer;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        transition: background 0.2s;
+    }
+    
+    .close-btn:hover {
+        background: #f7fafc;
+        color: #2d3748;
+    }
+    
+    .overlay-section {
+        margin-bottom: 25px;
+    }
+    
+    .overlay-section label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #4a5568;
+        font-size: 0.875rem;
+    }
+    
+    .overlay-section .description-view {
+        background: #f7fafc;
+        padding: 15px;
+        border-radius: 6px;
+        color: #2d3748;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        margin-bottom: 10px;
+    }
+    
+    .overlay-section textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 0.9375rem;
+        font-family: inherit;
+        resize: vertical;
+        min-height: 150px;
+    }
+    
+    .overlay-section textarea:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .overlay-section select,
+    .overlay-section input[type="date"] {
+        width: 100%;
+        padding: 10px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 0.9375rem;
+    }
+    
+    .overlay-section select:focus,
+    .overlay-section input[type="date"]:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .overlay-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 25px;
+        padding-top: 20px;
+        border-top: 2px solid #e2e8f0;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .btn-primary {
+        background: #667eea;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #5568d3;
+    }
+    
+    .btn-danger {
+        background: #e53e3e;
+        color: white;
+    }
+    
+    .btn-danger:hover {
+        background: #c53030;
+    }
+    
+    .btn-secondary {
+        background: #718096;
+        color: white;
+    }
+    
+    .btn-secondary:hover {
+        background: #4a5568;
+    }
+    
+    .edit-mode {
+        display: none;
+    }
+    
+    .edit-mode.active {
+        display: block;
+    }
+    
+    .view-mode {
+        display: block;
+    }
+    
+    .view-mode.hidden {
+        display: none;
+    }
+    
+    .pagination {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin: 20px 0;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .pagination-info {
+        color: #718096;
+        font-size: 0.875rem;
+        margin: 0 10px;
+    }
+    
+    .pagination-btn {
+        padding: 8px 16px;
+        border: 2px solid #e2e8f0;
+        background: white;
+        color: #4a5568;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 0.875rem;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .pagination-btn:hover:not(.disabled) {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
+    
+    .pagination-btn.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+    
+    .pagination-btn.active {
+        background: #667eea;
+        color: white;
+        border-color: #667eea;
+    }
 {% endblock %}
 
 {% block content %}
     <div class="filters-container">
         <form method="GET" class="filters-form">
+            <!-- First row -->
+            <div class="filter-group filter-group-search">
+                <label for="search">Search</label>
+                <input type="text" id="search" name="search" placeholder="Search customer name or description..." value="{{ search_query or '' }}">
+            </div>
+            
+            <div class="filter-group">
+                <label for="ticket_type_id">Ticket Type</label>
+                <select id="ticket_type_id" name="ticket_type_id">
+                    <option value="">All Types</option>
+                    {% for ticket_type in ticket_types %}
+                    <option value="{{ ticket_type.id }}" {% if selected_ticket_type_id == ticket_type.id %}selected{% endif %}>
+                        {{ ticket_type.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="status">Status</label>
+                <select id="status" name="status">
+                    <option value="">All Statuses</option>
+                    <option value="opened" {% if selected_status == 'opened' %}selected{% endif %}>Opened</option>
+                    <option value="closed" {% if selected_status == 'closed' %}selected{% endif %}>Closed</option>
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="due_date_filter">Due Date</label>
+                <select id="due_date_filter" name="due_date_filter">
+                    <option value="">All Dates</option>
+                    <option value="past_due" {% if selected_due_date_filter == 'past_due' %}selected{% endif %}>Past Due</option>
+                    <option value="current_week" {% if selected_due_date_filter == 'current_week' %}selected{% endif %}>Current Week</option>
+                    <option value="next_week" {% if selected_due_date_filter == 'next_week' %}selected{% endif %}>Next Week</option>
+                    <option value="current_and_next_week" {% if selected_due_date_filter == 'current_and_next_week' %}selected{% endif %}>Current & Next Week</option>
+                    <option value="current_month" {% if selected_due_date_filter == 'current_month' %}selected{% endif %}>Current Month</option>
+                    <option value="next_month" {% if selected_due_date_filter == 'next_month' %}selected{% endif %}>Next Month</option>
+                    <option value="month_2" {% if selected_due_date_filter == 'month_2' %}selected{% endif %}>Month +2</option>
+                    <option value="month_3" {% if selected_due_date_filter == 'month_3' %}selected{% endif %}>Month +3</option>
+                </select>
+            </div>
+            
+            <!-- Second row -->
+            <div class="filter-group">
+                <label for="brand_id">Brand</label>
+                <select id="brand_id" name="brand_id">
+                    <option value="">All Brands</option>
+                    {% for brand in brands %}
+                    <option value="{{ brand.id }}" {% if selected_brand_id == brand.id %}selected{% endif %}>
+                        {{ brand.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
             <div class="filter-group">
                 <label for="customer_id">Customer</label>
                 <select id="customer_id" name="customer_id">
@@ -177,39 +511,91 @@
             </div>
             
             <div class="filter-group">
-                <label for="status">Status</label>
-                <select id="status" name="status">
-                    <option value="">All Statuses</option>
-                    <option value="opened" {% if selected_status == 'opened' %}selected{% endif %}>Opened</option>
-                    <option value="closed" {% if selected_status == 'closed' %}selected{% endif %}>Closed</option>
+                <label for="flag_id">Flag</label>
+                <select id="flag_id" name="flag_id">
+                    <option value="">All Flags</option>
+                    {% for flag in flags %}
+                    <option value="{{ flag.id }}" {% if selected_flag_id == flag.id %}selected{% endif %}>
+                        {{ flag.name }}
+                    </option>
+                    {% endfor %}
                 </select>
             </div>
             
-            <div class="filter-group">
+            <div class="filter-group filter-group-button">
                 <button type="submit" class="btn-filter">Apply Filters</button>
             </div>
         </form>
     </div>
     
+    {% if pagination and pagination.pages > 1 %}
+    <div class="pagination">
+        {% if pagination.has_prev %}
+            <a href="{{ url_for('crm.all_tickets', page=pagination.prev_num, search=search_query, ticket_type_id=selected_ticket_type_id, status=selected_status, due_date_filter=selected_due_date_filter, brand_id=selected_brand_id, customer_id=selected_customer_id, owner_id=selected_owner_id, flag_id=selected_flag_id) }}" class="pagination-btn">‹ Previous</a>
+        {% else %}
+            <span class="pagination-btn disabled">‹ Previous</span>
+        {% endif %}
+        
+        {% for page_num in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+            {% if page_num %}
+                {% if page_num == pagination.page %}
+                    <span class="pagination-btn active">{{ page_num }}</span>
+                {% else %}
+                    <a href="{{ url_for('crm.all_tickets', page=page_num, search=search_query, ticket_type_id=selected_ticket_type_id, status=selected_status, due_date_filter=selected_due_date_filter, brand_id=selected_brand_id, customer_id=selected_customer_id, owner_id=selected_owner_id, flag_id=selected_flag_id) }}" class="pagination-btn">{{ page_num }}</a>
+                {% endif %}
+            {% else %}
+                <span class="pagination-btn disabled">...</span>
+            {% endif %}
+        {% endfor %}
+        
+        {% if pagination.has_next %}
+            <a href="{{ url_for('crm.all_tickets', page=pagination.next_num, search=search_query, ticket_type_id=selected_ticket_type_id, status=selected_status, due_date_filter=selected_due_date_filter, brand_id=selected_brand_id, customer_id=selected_customer_id, owner_id=selected_owner_id, flag_id=selected_flag_id) }}" class="pagination-btn">Next ›</a>
+        {% else %}
+            <span class="pagination-btn disabled">Next ›</span>
+        {% endif %}
+        
+        <span class="pagination-info">
+            Showing {{ pagination.per_page * (pagination.page - 1) + 1 }} - {{ pagination.per_page * (pagination.page - 1) + pagination.items|length }} of {{ pagination.total }} tickets
+        </span>
+    </div>
+    {% elif pagination and pagination.total > 0 %}
+    <div class="pagination">
+        <span class="pagination-info">
+            Showing {{ pagination.total }} ticket{{ 's' if pagination.total != 1 else '' }}
+        </span>
+    </div>
+    {% endif %}
+    
     <div class="tickets-container">
         {% if tickets %}
             {% for ticket in tickets %}
-            <div class="ticket-card {{ 'closed' if ticket.status == 'closed' else '' }}">
+            <div class="ticket-card {{ 'closed' if ticket.status == 'closed' else '' }}" data-ticket-id="{{ ticket.id }}">
                 <div class="ticket-card-header">
-                    <span class="status-badge {{ ticket.status }}">{{ ticket.status|title }}</span>
-                    {% if ticket.ticket_type %}
-                    <span style="font-size: 0.75rem; color: #718096; background: #f7fafc; padding: 4px 8px; border-radius: 4px;">
-                        {{ ticket.ticket_type.name }}
-                    </span>
-                    {% endif %}
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <span class="status-badge {{ ticket.status }}" onclick="toggleTicketStatus({{ ticket.id }}); event.stopPropagation();">{{ ticket.status|title }}</span>
+                        {% if ticket.ticket_type %}
+                        <span style="font-size: 0.75rem; color: #718096; background: #f7fafc; padding: 4px 8px; border-radius: 4px;">
+                            {{ ticket.ticket_type.name }}
+                        </span>
+                        {% endif %}
+                        {% for flag in ticket.flags %}
+                        <span style="font-size: 0.75rem; color: {{ flag.text_color }}; background: {{ flag.color }}; padding: 4px 12px; border-radius: 4px; display: inline-block; font-weight: 500;">
+                            {{ flag.name }}
+                        </span>
+                        {% endfor %}
+                    </div>
                 </div>
                 <div class="ticket-card-description">
-                    {{ ticket.description }}
+                    {% if ticket.description|length > 500 %}
+                        {{ ticket.description[:500] }}...
+                    {% else %}
+                        {{ ticket.description }}
+                    {% endif %}
                 </div>
                 <div class="ticket-card-meta">
                     <div class="ticket-card-meta-item">
                         <span class="ticket-card-meta-label">Customer:</span>
-                        <a href="{{ url_for('core.customer_detail', customer_id=ticket.customer_id) }}" class="btn-link">
+                        <a href="{{ url_for('core.customer_detail', customer_id=ticket.customer_id) }}" class="btn-link" onclick="event.stopPropagation();">
                             {{ ticket.customer.channel.name }} - {{ ticket.customer.name }}
                         </a>
                     </div>
@@ -223,22 +609,353 @@
                         <span class="ticket-card-meta-label">Owner:</span>
                         <span>{{ ticket.owner.username if ticket.owner else 'Unknown' }}</span>
                     </div>
-                    <div class="ticket-card-meta-item">
-                        <span class="ticket-card-meta-label">Creator:</span>
-                        <span>{{ ticket.creator.username if ticket.creator else 'Unknown' }}</span>
-                    </div>
-                    <div class="ticket-card-meta-item">
-                        <span class="ticket-card-meta-label">Created:</span>
-                        <span>{{ ticket.created_at.strftime('%Y-%m-%d') if ticket.created_at else '-' }}</span>
-                    </div>
                 </div>
             </div>
             {% endfor %}
         {% else %}
-            <div style="text-align: center; padding: 40px; color: #718096; background: white; border-radius: 8px;">
+            <div style="grid-column: 1 / -1; text-align: center; padding: 40px; color: #718096; background: white; border-radius: 8px;">
                 No tickets found
             </div>
         {% endif %}
     </div>
+    
+    <!-- Overlay for ticket details -->
+    <div class="overlay" id="ticketOverlay">
+        <div class="overlay-content">
+            <div class="overlay-header">
+                <h2>Ticket Details</h2>
+                <button class="close-btn" onclick="closeOverlay()">&times;</button>
+            </div>
+            
+            <form id="ticketForm">
+                <input type="hidden" id="ticketId" name="ticket_id">
+                
+                <div class="overlay-section">
+                    <label>Description</label>
+                    <div class="description-view view-mode" id="descriptionView"></div>
+                    <textarea id="descriptionEdit" name="description" class="edit-mode" placeholder="Enter ticket description"></textarea>
+                    <button type="button" class="btn btn-secondary" id="editDescriptionBtn" onclick="toggleEditDescription()">Edit</button>
+                    <button type="button" class="btn btn-secondary edit-mode" id="cancelEditBtn" onclick="toggleEditDescription()" style="display: none;">Cancel</button>
+                </div>
+                
+                <div class="overlay-section">
+                    <label for="ticketType">Classification</label>
+                    <select id="ticketType" name="ticket_type_id">
+                        <option value="">No Classification</option>
+                        {% for ticket_type in ticket_types %}
+                        <option value="{{ ticket_type.id }}">{{ ticket_type.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                <div class="overlay-section" style="position: relative;">
+                    <label>Flags</label>
+                    <div style="margin-bottom: 10px; position: relative;">
+                        <input type="text" id="flagSearch" placeholder="Search flags to add..." style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 6px; font-size: 0.9375rem;">
+                        <div id="flagSearchResults" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 2px solid #e2e8f0; border-radius: 6px; max-height: 200px; overflow-y: auto; z-index: 1000; margin-top: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"></div>
+                    </div>
+                    <div id="selectedFlagsContainer" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; min-height: 40px; padding: 10px; background: #f7fafc; border-radius: 6px;">
+                        <div style="color: #718096; font-size: 0.875rem;">No flags selected</div>
+                    </div>
+                    <input type="hidden" id="selectedFlagIds" name="flag_ids" value="">
+                </div>
+                
+                <div class="overlay-section">
+                    <label for="dueDate">Due Date</label>
+                    <input type="date" id="dueDate" name="due_date">
+                </div>
+                
+                <div class="overlay-actions">
+                    <button type="button" class="btn btn-danger" onclick="deleteTicket()">Delete</button>
+                    <button type="button" class="btn btn-secondary" onclick="closeOverlay()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
 {% endblock %}
 
+{% block scripts %}
+<script>
+    // Ticket data storage
+    let currentTicketData = null;
+    
+    // Open overlay when clicking on a ticket card
+    document.querySelectorAll('.ticket-card').forEach(card => {
+        card.addEventListener('click', function(e) {
+            // Don't open overlay if clicking on a link
+            if (e.target.tagName === 'A') {
+                return;
+            }
+            
+            const ticketId = this.getAttribute('data-ticket-id');
+            openOverlay(ticketId);
+        });
+    });
+    
+    // Close overlay when clicking outside
+    document.getElementById('ticketOverlay').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeOverlay();
+        }
+    });
+    
+    // Close overlay on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeOverlay();
+        }
+    });
+    
+    function openOverlay(ticketId) {
+        // Fetch ticket data
+        fetch(`/crm/tickets/${ticketId}/data`)
+            .then(response => response.json())
+            .then(data => {
+                currentTicketData = data.ticket;
+                populateOverlay(data.ticket);
+                document.getElementById('ticketOverlay').classList.add('active');
+            })
+            .catch(error => {
+                console.error('Error fetching ticket:', error);
+                alert('Error loading ticket details');
+            });
+    }
+    
+    function populateOverlay(ticket) {
+        document.getElementById('ticketId').value = ticket.id;
+        document.getElementById('descriptionView').textContent = ticket.description;
+        document.getElementById('descriptionEdit').value = ticket.description;
+        document.getElementById('ticketType').value = ticket.ticket_type_id || '';
+        document.getElementById('dueDate').value = ticket.due_date || '';
+        
+        // Populate flags
+        selectedFlags = ticket.flags || [];
+        updateSelectedFlagsDisplay();
+        updateSelectedFlagIds();
+        
+        // Reset edit mode
+        document.getElementById('descriptionView').classList.remove('hidden');
+        document.getElementById('descriptionEdit').classList.remove('active');
+        document.getElementById('editDescriptionBtn').style.display = 'inline-block';
+        document.getElementById('cancelEditBtn').style.display = 'none';
+    }
+    
+    let flagsList = [];
+    let selectedFlags = [];
+    
+    function loadFlags() {
+        fetch('/crm/api/ticket-flags')
+            .then(response => response.json())
+            .then(data => {
+                flagsList = data.flags;
+            })
+            .catch(error => {
+                console.error('Error loading flags:', error);
+            });
+    }
+    
+    function updateSelectedFlagsDisplay() {
+        const container = document.getElementById('selectedFlagsContainer');
+        container.innerHTML = '';
+        
+        if (selectedFlags.length === 0) {
+            container.innerHTML = '<div style="color: #718096; font-size: 0.875rem;">No flags selected</div>';
+        } else {
+            selectedFlags.forEach(flag => {
+                const flagBtn = document.createElement('span');
+                flagBtn.style.cssText = `font-size: 0.75rem; color: ${flag.text_color || '#FFFFFF'}; background: ${flag.color}; padding: 4px 12px; border-radius: 4px; display: inline-block; font-weight: 500; cursor: pointer; position: relative;`;
+                flagBtn.textContent = flag.name;
+                
+                const removeBtn = document.createElement('span');
+                removeBtn.textContent = ' ×';
+                removeBtn.style.cssText = 'margin-left: 6px; font-weight: bold; opacity: 0.8;';
+                removeBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    selectedFlags = selectedFlags.filter(f => f.id !== flag.id);
+                    updateSelectedFlagsDisplay();
+                    updateSelectedFlagIds();
+                };
+                
+                flagBtn.appendChild(removeBtn);
+                container.appendChild(flagBtn);
+            });
+        }
+    }
+    
+    function updateSelectedFlagIds() {
+        const flagIds = selectedFlags.map(f => f.id);
+        document.getElementById('selectedFlagIds').value = JSON.stringify(flagIds);
+    }
+    
+    // Flag search functionality
+    document.getElementById('flagSearch').addEventListener('input', function(e) {
+        const searchTerm = e.target.value.toLowerCase().trim();
+        const resultsContainer = document.getElementById('flagSearchResults');
+        
+        if (searchTerm.length === 0) {
+            resultsContainer.style.display = 'none';
+            return;
+        }
+        
+        const filtered = flagsList.filter(flag => 
+            flag.name.toLowerCase().includes(searchTerm) &&
+            !selectedFlags.some(sf => sf.id === flag.id)
+        );
+        
+        if (filtered.length === 0) {
+            resultsContainer.innerHTML = '<div style="padding: 10px; color: #718096; font-size: 0.875rem;">No flags found</div>';
+            resultsContainer.style.display = 'block';
+        } else {
+            resultsContainer.innerHTML = '';
+            filtered.forEach(flag => {
+                const item = document.createElement('div');
+                item.style.cssText = `padding: 10px; cursor: pointer; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 8px;`;
+                item.onmouseover = function() { this.style.background = '#f7fafc'; };
+                item.onmouseout = function() { this.style.background = 'white'; };
+                item.onclick = function() {
+                    selectedFlags.push(flag);
+                    updateSelectedFlagsDisplay();
+                    updateSelectedFlagIds();
+                    e.target.value = '';
+                    resultsContainer.style.display = 'none';
+                };
+                
+                const colorSpan = document.createElement('span');
+                colorSpan.style.cssText = `width: 20px; height: 20px; border-radius: 4px; background-color: ${flag.color}; border: 1px solid #e2e8f0; display: inline-block;`;
+                
+                const textSpan = document.createElement('span');
+                textSpan.textContent = flag.name;
+                textSpan.style.fontSize = '0.875rem';
+                
+                item.appendChild(colorSpan);
+                item.appendChild(textSpan);
+                resultsContainer.appendChild(item);
+            });
+            resultsContainer.style.display = 'block';
+        }
+    });
+    
+    // Close search results when clicking outside
+    document.addEventListener('click', function(e) {
+        const searchInput = document.getElementById('flagSearch');
+        const resultsContainer = document.getElementById('flagSearchResults');
+        if (!searchInput.contains(e.target) && !resultsContainer.contains(e.target)) {
+            resultsContainer.style.display = 'none';
+        }
+    });
+    
+    // Load flags on page load
+    loadFlags();
+    
+    function closeOverlay() {
+        document.getElementById('ticketOverlay').classList.remove('active');
+        currentTicketData = null;
+    }
+    
+    function toggleEditDescription() {
+        const viewMode = document.getElementById('descriptionView');
+        const editMode = document.getElementById('descriptionEdit');
+        const editBtn = document.getElementById('editDescriptionBtn');
+        const cancelBtn = document.getElementById('cancelEditBtn');
+        
+        if (viewMode.classList.contains('hidden')) {
+            // Cancel edit - restore original
+            editMode.value = currentTicketData.description;
+            viewMode.classList.remove('hidden');
+            editMode.classList.remove('active');
+            editBtn.style.display = 'inline-block';
+            cancelBtn.style.display = 'none';
+        } else {
+            // Enter edit mode
+            viewMode.classList.add('hidden');
+            editMode.classList.add('active');
+            editBtn.style.display = 'none';
+            cancelBtn.style.display = 'inline-block';
+        }
+    }
+    
+    // Handle form submission
+    document.getElementById('ticketForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const ticketId = document.getElementById('ticketId').value;
+        const flagIds = JSON.parse(document.getElementById('selectedFlagIds').value || '[]');
+        
+        const formData = {
+            description: document.getElementById('descriptionEdit').value,
+            ticket_type_id: document.getElementById('ticketType').value || null,
+            due_date: document.getElementById('dueDate').value || null,
+            flag_ids: flagIds
+        };
+        
+        fetch(`/crm/tickets/${ticketId}/edit`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Reload page to show updated data
+                window.location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'Failed to update ticket'));
+            }
+        })
+        .catch(error => {
+            console.error('Error updating ticket:', error);
+            alert('Error updating ticket');
+        });
+    });
+    
+    function deleteTicket() {
+        if (!confirm('Are you sure you want to delete this ticket? This action cannot be undone.')) {
+            return;
+        }
+        
+        const ticketId = document.getElementById('ticketId').value;
+        
+        fetch(`/crm/tickets/${ticketId}/delete`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Reload page to show updated data
+                window.location.reload();
+            } else {
+                alert('Error: ' + (data.error || 'Failed to delete ticket'));
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting ticket:', error);
+            alert('Error deleting ticket');
+        });
+    }
+    
+    function toggleTicketStatus(ticketId) {
+        fetch(`/crm/tickets/${ticketId}/toggle-status`, {
+            method: 'POST'
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Reload page to show updated data
+                window.location.reload();
+            } else {
+                alert('Error toggling ticket status');
+            }
+        })
+        .catch(error => {
+            console.error('Error toggling ticket status:', error);
+            alert('Error toggling ticket status');
+        });
+    }
+</script>
+{% endblock %}

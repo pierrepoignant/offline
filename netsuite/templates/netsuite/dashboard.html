@@ -217,6 +217,14 @@
                             </select>
                         </div>
                     </div>
+                    <div class="filter-row" style="margin-top: 10px;">
+                        <div class="filter-group">
+                            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                                <input type="checkbox" id="show_target_2026" name="show_target_2026" style="width: auto; margin: 0;">
+                                <span>Show Target for 2026</span>
+                            </label>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="filter-actions">
@@ -367,10 +375,32 @@
             const chartContainer = document.querySelector('.chart-container');
             chartContainer.innerHTML = '<div class="chart-loading">Loading chart data...</div>';
             
-            // Fetch data
-            fetch(`{{ url_for('netsuite.api_chart_data') }}?${params.toString()}`)
-                .then(response => response.json())
-                .then(data => {
+            // Fetch chart data
+            const chartDataPromise = fetch(`{{ url_for('netsuite.api_chart_data') }}?${params.toString()}`)
+                .then(response => response.json());
+            
+            // Check if target toggle is enabled
+            const showTarget = document.getElementById('show_target_2026').checked;
+            const brandId = formData.get('brand_id');
+            const channelId = formData.get('channel_id');
+            
+            // Fetch target data if toggle is enabled and brand/channel are selected
+            let targetDataPromise = Promise.resolve(null);
+            if (showTarget && brandId && channelId) {
+                const targetParams = new URLSearchParams();
+                targetParams.append('brand_id', brandId);
+                targetParams.append('channel_id', channelId);
+                targetDataPromise = fetch(`{{ url_for('netsuite.api_target_data') }}?${targetParams.toString()}`)
+                    .then(response => response.json())
+                    .catch(error => {
+                        console.error('Error loading target data:', error);
+                        return null;
+                    });
+            }
+            
+            // Wait for both promises
+            Promise.all([chartDataPromise, targetDataPromise])
+                .then(([data, targetData]) => {
                     if (data.error) {
                         chartContainer.innerHTML = `<div class="chart-error">Error: ${data.error}</div>`;
                         return;
@@ -385,36 +415,56 @@
                         chart.destroy();
                     }
                     
+                    // Build datasets array
+                    const datasets = [
+                        {
+                            label: '2025',
+                            data: data.values_2025,
+                            borderColor: 'rgb(59, 130, 246)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            spanGaps: true  // Don't connect points across null values
+                        },
+                        {
+                            label: '2024',
+                            data: data.values_2024,
+                            borderColor: 'rgb(239, 68, 68)',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            spanGaps: true  // Don't connect points across null values
+                        }
+                    ];
+                    
+                    // Add target line if data is available
+                    if (targetData && !targetData.error && targetData.values) {
+                        datasets.push({
+                            label: 'Target 2026',
+                            data: targetData.values,
+                            borderColor: 'rgb(34, 197, 94)',
+                            backgroundColor: 'rgba(34, 197, 94, 0.1)',
+                            borderWidth: 2,
+                            borderDash: [5, 5],  // Dashed line
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            spanGaps: true
+                        });
+                    }
+                    
                     chart = new Chart(ctx, {
                         type: 'line',
                         data: {
                             labels: data.labels,
-                            datasets: [
-                                {
-                                    label: '2025',
-                                    data: data.values_2025,
-                                    borderColor: 'rgb(59, 130, 246)',
-                                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                                    borderWidth: 2,
-                                    fill: false,
-                                    tension: 0.4,
-                                    pointRadius: 4,
-                                    pointHoverRadius: 6,
-                                    spanGaps: true  // Don't connect points across null values
-                                },
-                                {
-                                    label: '2024',
-                                    data: data.values_2024,
-                                    borderColor: 'rgb(239, 68, 68)',
-                                    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                                    borderWidth: 2,
-                                    fill: false,
-                                    tension: 0.4,
-                                    pointRadius: 4,
-                                    pointHoverRadius: 6,
-                                    spanGaps: true  // Don't connect points across null values
-                                }
-                            ]
+                            datasets: datasets
                         },
                         options: {
                             responsive: true,
@@ -541,6 +591,11 @@
         // Update totals when filters change (item and channel only, brand is handled above)
         document.getElementById('item_id').addEventListener('change', loadTotals);
         document.getElementById('channel_id').addEventListener('change', loadTotals);
+        
+        // Update chart when target toggle changes
+        document.getElementById('show_target_2026').addEventListener('change', function() {
+            loadChartData();
+        });
         
         // Initialize chart on page load
         initChart();

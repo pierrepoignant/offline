@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block page_title_text %}🎯 Targets - Brands{% endblock %}
+
+{% block extra_styles %}
+    .header-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .data-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .data-table thead {
+        background: #667eea;
+        color: white;
+    }
+    
+    .data-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .data-table td {
+        padding: 15px;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    
+    .data-table tbody tr:hover {
+        background: #f7fafc;
+    }
+    
+    .data-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .btn-small {
+        padding: 6px 12px;
+        font-size: 0.875rem;
+        text-decoration: none;
+        border-radius: 4px;
+        font-weight: 600;
+        transition: all 0.2s ease;
+        display: inline-block;
+        border: none;
+        cursor: pointer;
+        margin-right: 5px;
+    }
+    
+    .btn-view {
+        background: #667eea;
+        color: white;
+    }
+    
+    .btn-view:hover {
+        background: #5568d3;
+        transform: translateY(-1px);
+    }
+    
+    .btn-edit {
+        background: #48bb78;
+        color: white;
+    }
+    
+    .btn-edit:hover {
+        background: #38a169;
+        transform: translateY(-1px);
+    }
+    
+    .no-data {
+        text-align: center;
+        padding: 60px 20px;
+        color: #718096;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="header-actions">
+        <h2 style="margin: 0; color: #2d3748;">All Brands</h2>
+    </div>
+    
+    {% if brands %}
+    <div class="table-container">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Brand Name</th>
+                    <th>Code</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for brand in brands %}
+                <tr>
+                    <td><strong>{{ brand.name }}</strong></td>
+                    <td>{{ brand.code or '-' }}</td>
+                    <td>
+                        <a href="{{ url_for('targets.view_brand_targets', brand_id=brand.id) }}" class="btn-small btn-view">👁️ View Targets</a>
+                        <a href="{{ url_for('targets.edit_brand_targets', brand_id=brand.id) }}" class="btn-small btn-edit">✏️ Edit Targets</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="no-data">
+        <h3>No brands found</h3>
+        <p>Brands will appear here once they are created.</p>
+    </div>
+    {% endif %}
+{% endblock %}
+

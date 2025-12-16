@@ -1,0 +1,609 @@
+{% extends "base.html" %}
+
+{% block page_title_text %}🔗 Link Unlinked Sellthrough Data{% endblock %}
+
+{% block extra_styles %}
+    .header-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+    }
+    
+    .filter-section {
+        background: #f7fafc;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 25px;
+    }
+    
+    .filter-row {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 15px;
+        align-items: end;
+    }
+    
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .filter-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #4a5568;
+        font-size: 0.875rem;
+    }
+    
+    .filter-group select {
+        width: 100%;
+        padding: 10px 15px;
+        font-size: 14px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        background: white;
+    }
+    
+    .filter-group select:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .filter-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+    }
+    
+    .btn-filter {
+        background: #667eea;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    
+    .btn-filter:hover {
+        background: #5568d3;
+    }
+    
+    .btn-clear {
+        background: #e2e8f0;
+        color: #4a5568;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+    }
+    
+    .btn-clear:hover {
+        background: #cbd5e0;
+    }
+    
+    .grouped-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .channel-group {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .channel-group-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .channel-group-title {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+    
+    .channel-group-title h3 {
+        margin: 0;
+        color: #2d3748;
+        font-size: 1.25rem;
+    }
+    
+    .channel-group-title .channel-name {
+        color: #718096;
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+    
+    .channel-group-stats {
+        display: flex;
+        gap: 20px;
+        font-size: 0.875rem;
+        color: #4a5568;
+    }
+    
+    .channel-group-stats span {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .channel-group-stats .stat-value {
+        font-weight: 600;
+        color: #2d3748;
+        font-size: 1rem;
+    }
+    
+    .btn-link {
+        background: #48bb78;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-link:hover {
+        background: #38a169;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(72, 187, 120, 0.3);
+    }
+    
+    .no-data {
+        text-align: center;
+        padding: 60px 20px;
+        color: #718096;
+    }
+    
+    /* Overlay styles */
+    .overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        overflow-y: auto;
+    }
+    
+    .overlay.active {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+    }
+    
+    .overlay-content {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        max-width: 600px;
+        width: 100%;
+        max-height: 90vh;
+        overflow-y: auto;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        position: relative;
+    }
+    
+    .overlay-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        padding-bottom: 15px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .overlay-header h2 {
+        margin: 0;
+        color: #2d3748;
+        font-size: 1.5rem;
+    }
+    
+    .close-btn {
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        color: #718096;
+        cursor: pointer;
+        padding: 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        transition: background 0.2s;
+    }
+    
+    .close-btn:hover {
+        background: #f7fafc;
+        color: #2d3748;
+    }
+    
+    .search-section {
+        margin-bottom: 20px;
+    }
+    
+    .search-section label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #4a5568;
+        font-size: 0.875rem;
+    }
+    
+    .search-input {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 14px;
+        transition: border-color 0.2s;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .search-results {
+        margin-top: 15px;
+        max-height: 400px;
+        overflow-y: auto;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+    }
+    
+    .search-result-item {
+        padding: 15px;
+        border-bottom: 1px solid #e2e8f0;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+    
+    .search-result-item:hover {
+        background: #f7fafc;
+    }
+    
+    .search-result-item:last-child {
+        border-bottom: none;
+    }
+    
+    .search-result-item.selected {
+        background: #e6fffa;
+        border-left: 4px solid #48bb78;
+    }
+    
+    .result-item-code {
+        font-weight: 600;
+        color: #2d3748;
+        margin-bottom: 4px;
+    }
+    
+    .result-item-name {
+        color: #718096;
+        font-size: 0.875rem;
+    }
+    
+    .result-item-brand {
+        color: #a0aec0;
+        font-size: 0.75rem;
+        margin-top: 4px;
+    }
+    
+    .overlay-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+        justify-content: flex-end;
+    }
+    
+    .btn {
+        padding: 12px 24px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        font-size: 0.875rem;
+        transition: all 0.2s ease;
+    }
+    
+    .btn-primary {
+        background: #667eea;
+        color: white;
+    }
+    
+    .btn-primary:hover {
+        background: #5568d3;
+    }
+    
+    .btn-secondary {
+        background: #e2e8f0;
+        color: #4a5568;
+    }
+    
+    .btn-secondary:hover {
+        background: #cbd5e0;
+    }
+    
+    .btn-primary:disabled {
+        background: #cbd5e0;
+        cursor: not-allowed;
+    }
+    
+    .loading {
+        text-align: center;
+        padding: 20px;
+        color: #718096;
+    }
+    
+    .no-results {
+        text-align: center;
+        padding: 40px 20px;
+        color: #718096;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="header-actions">
+        <h2 style="margin: 0; color: #2d3748;">Unlinked Sellthrough Data</h2>
+    </div>
+    
+    <div class="filter-section">
+        <form method="GET" action="{{ url_for('sellthrough.unlinked') }}">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="channel_id">Channel</label>
+                    <select id="channel_id" name="channel_id">
+                        <option value="">All Channels</option>
+                        {% for channel in channels %}
+                        <option value="{{ channel.id }}" {% if selected_channel_id == channel.id %}selected{% endif %}>{{ channel.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            
+            <div class="filter-actions">
+                <button type="submit" class="btn-filter">🔍 Filter</button>
+                <a href="{{ url_for('sellthrough.unlinked') }}" class="btn-clear">Clear Filters</a>
+            </div>
+        </form>
+    </div>
+    
+    {% if grouped_data %}
+    <div class="grouped-container">
+        {% for channel_code, group_info in grouped_data.items() %}
+        <div class="channel-group">
+            <div class="channel-group-header">
+                <div class="channel-group-title">
+                    <h3>Channel Code: {{ channel_code }}</h3>
+                    <span class="channel-name">{{ group_info.channel_name }}</span>
+                </div>
+                <div class="channel-group-stats">
+                    <span>
+                        <span class="stat-label">Entries</span>
+                        <span class="stat-value">{{ group_info.count }}</span>
+                    </span>
+                    <span>
+                        <span class="stat-label">Date Range</span>
+                        <span class="stat-value">{{ group_info.first_date.strftime('%Y-%m-%d') }} to {{ group_info.last_date.strftime('%Y-%m-%d') }}</span>
+                    </span>
+                    <span>
+                        <span class="stat-label">Total Revenues</span>
+                        <span class="stat-value">${{ "{:,.2f}".format(group_info.total_revenues) }}</span>
+                    </span>
+                    <span>
+                        <span class="stat-label">Total Units</span>
+                        <span class="stat-value">{{ "{:,}".format(group_info.total_units) }}</span>
+                    </span>
+                </div>
+                <button class="btn-link" onclick="openLinkModal('{{ channel_code }}', {{ group_info.channel_id }})">
+                    🔗 Link to Item
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="no-data">
+        <h3>No unlinked sellthrough data found</h3>
+        <p>All sellthrough data entries are linked to items.</p>
+    </div>
+    {% endif %}
+    
+    <!-- Overlay for item search and linking -->
+    <div class="overlay" id="linkOverlay">
+        <div class="overlay-content">
+            <div class="overlay-header">
+                <h2>Link Item to Channel Code</h2>
+                <button class="close-btn" onclick="closeLinkModal()">&times;</button>
+            </div>
+            
+            <div class="search-section">
+                <label for="itemSearch">Search Items (by code or name)</label>
+                <input type="text" id="itemSearch" class="search-input" placeholder="Type to search..." autocomplete="off">
+                <div id="searchResults" class="search-results" style="display: none;">
+                    <div class="loading">Searching...</div>
+                </div>
+            </div>
+            
+            <div id="selectedItem" style="display: none; padding: 15px; background: #e6fffa; border-radius: 6px; margin-bottom: 20px;">
+                <div class="result-item-code" id="selectedItemCode"></div>
+                <div class="result-item-name" id="selectedItemName"></div>
+                <div class="result-item-brand" id="selectedItemBrand"></div>
+            </div>
+            
+            <div class="overlay-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeLinkModal()">Cancel</button>
+                <button type="button" class="btn btn-primary" id="linkButton" onclick="linkItem()" disabled>Link Item</button>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentChannelCode = null;
+    let currentChannelId = null;
+    let selectedItemId = null;
+    let searchTimeout = null;
+    
+    function openLinkModal(channelCode, channelId) {
+        currentChannelCode = channelCode;
+        currentChannelId = channelId;
+        selectedItemId = null;
+        
+        document.getElementById('linkOverlay').classList.add('active');
+        document.getElementById('itemSearch').value = '';
+        document.getElementById('itemSearch').focus();
+        document.getElementById('searchResults').style.display = 'none';
+        document.getElementById('selectedItem').style.display = 'none';
+        document.getElementById('linkButton').disabled = true;
+    }
+    
+    function closeLinkModal() {
+        document.getElementById('linkOverlay').classList.remove('active');
+        currentChannelCode = null;
+        currentChannelId = null;
+        selectedItemId = null;
+    }
+    
+    // Close overlay when clicking outside
+    document.getElementById('linkOverlay').addEventListener('click', function(e) {
+        if (e.target === this) {
+            closeLinkModal();
+        }
+    });
+    
+    // Close overlay on Escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeLinkModal();
+        }
+    });
+    
+    // Search items as user types
+    document.getElementById('itemSearch').addEventListener('input', function() {
+        const searchTerm = this.value.trim();
+        
+        // Clear previous timeout
+        if (searchTimeout) {
+            clearTimeout(searchTimeout);
+        }
+        
+        if (searchTerm.length < 2) {
+            document.getElementById('searchResults').style.display = 'none';
+            return;
+        }
+        
+        // Debounce search
+        searchTimeout = setTimeout(() => {
+            searchItems(searchTerm);
+        }, 300);
+    });
+    
+    function searchItems(searchTerm) {
+        const resultsDiv = document.getElementById('searchResults');
+        resultsDiv.style.display = 'block';
+        resultsDiv.innerHTML = '<div class="loading">Searching...</div>';
+        
+        fetch(`{{ url_for('sellthrough.api_search_items') }}?q=${encodeURIComponent(searchTerm)}`)
+            .then(response => response.json())
+            .then(items => {
+                if (items.length === 0) {
+                    resultsDiv.innerHTML = '<div class="no-results">No items found</div>';
+                    return;
+                }
+                
+                resultsDiv.innerHTML = items.map(item => `
+                    <div class="search-result-item" onclick="selectItem(${item.id}, '${item.essor_code || ''}', '${(item.essor_name || '').replace(/'/g, "\\'")}', '${(item.brand_name || '').replace(/'/g, "\\'")}')">
+                        <div class="result-item-code">${item.essor_code || 'N/A'}</div>
+                        <div class="result-item-name">${item.essor_name || 'N/A'}</div>
+                        <div class="result-item-brand">Brand: ${item.brand_name || 'N/A'}</div>
+                    </div>
+                `).join('');
+            })
+            .catch(error => {
+                console.error('Error searching items:', error);
+                resultsDiv.innerHTML = '<div class="no-results">Error searching items</div>';
+            });
+    }
+    
+    function selectItem(itemId, code, name, brand) {
+        selectedItemId = itemId;
+        
+        // Update selected item display
+        document.getElementById('selectedItemCode').textContent = code || 'N/A';
+        document.getElementById('selectedItemName').textContent = name || 'N/A';
+        document.getElementById('selectedItemBrand').textContent = `Brand: ${brand || 'N/A'}`;
+        document.getElementById('selectedItem').style.display = 'block';
+        document.getElementById('linkButton').disabled = false;
+        
+        // Highlight selected item in results
+        document.querySelectorAll('.search-result-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+        event.currentTarget.classList.add('selected');
+    }
+    
+    function linkItem() {
+        if (!selectedItemId || !currentChannelCode || !currentChannelId) {
+            alert('Please select an item');
+            return;
+        }
+        
+        const linkButton = document.getElementById('linkButton');
+        linkButton.disabled = true;
+        linkButton.textContent = 'Linking...';
+        
+        fetch('{{ url_for("sellthrough.link_item") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                channel_code: currentChannelCode,
+                item_id: selectedItemId,
+                channel_id: currentChannelId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.error) {
+                alert('Error: ' + data.error);
+                linkButton.disabled = false;
+                linkButton.textContent = 'Link Item';
+            } else {
+                alert(data.message || 'Item linked successfully!');
+                closeLinkModal();
+                // Reload the page to show updated data
+                window.location.reload();
+            }
+        })
+        .catch(error => {
+            console.error('Error linking item:', error);
+            alert('Error linking item. Please try again.');
+            linkButton.disabled = false;
+            linkButton.textContent = 'Link Item';
+        });
+    }
+</script>
+{% endblock %}
+

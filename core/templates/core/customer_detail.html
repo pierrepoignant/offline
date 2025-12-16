@@ -212,9 +212,21 @@
     }
     
     .tickets-container {
-        display: flex;
-        flex-direction: column;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
         gap: 20px;
+    }
+    
+    @media (max-width: 1200px) {
+        .tickets-container {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .tickets-container {
+            grid-template-columns: 1fr;
+        }
     }
     
     .ticket-card {
@@ -224,8 +236,7 @@
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         border-left: 4px solid #667eea;
         transition: transform 0.2s, box-shadow 0.2s;
-        display: flex;
-        flex-direction: column;
+        cursor: pointer;
     }
     
     .ticket-card:hover {
@@ -250,14 +261,13 @@
         font-size: 0.9375rem;
         line-height: 1.6;
         margin-bottom: 15px;
-        flex-grow: 1;
         word-wrap: break-word;
     }
     
     .ticket-card-meta {
         display: flex;
-        flex-wrap: wrap;
-        gap: 15px;
+        flex-direction: column;
+        gap: 10px;
         margin-bottom: 15px;
         font-size: 0.875rem;
         color: #718096;
@@ -272,15 +282,6 @@
     .ticket-card-meta-label {
         font-weight: 600;
         color: #4a5568;
-    }
-    
-    .ticket-card-actions {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-top: auto;
-        padding-top: 15px;
-        border-top: 1px solid #e2e8f0;
     }
     
     .status-badge {
@@ -306,21 +307,6 @@
     .status-badge.closed {
         background: #fed7d7;
         color: #742a2a;
-    }
-    
-    .btn-edit {
-        background: #4299e1;
-        color: white;
-        border: none;
-        padding: 6px 12px;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 0.875rem;
-        transition: background 0.2s;
-    }
-    
-    .btn-edit:hover {
-        background: #3182ce;
     }
     
     .modal {
@@ -477,6 +463,7 @@
             <thead>
                 <tr>
                     <th>Item</th>
+                    <th>ASIN Status</th>
                     <th>Revenues 2024</th>
                     <th>Revenues 2025</th>
                     <th>YoY Growth</th>
@@ -484,7 +471,7 @@
             </thead>
             <tbody id="assortment-tbody">
                 <tr>
-                    <td colspan="4" style="text-align: center; padding: 40px;">
+                    <td colspan="5" style="text-align: center; padding: 40px;">
                         <div class="chart-loading">Loading assortment data...</div>
                     </td>
                 </tr>
@@ -538,6 +525,17 @@
                         <option value="">None</option>
                     </select>
                 </div>
+                <div class="form-group" style="position: relative;">
+                    <label>Flags</label>
+                    <div style="margin-bottom: 10px; position: relative;">
+                        <input type="text" id="create_flagSearch" placeholder="Search flags to add..." style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 6px; font-size: 0.9375rem;">
+                        <div id="create_flagSearchResults" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 2px solid #e2e8f0; border-radius: 6px; max-height: 200px; overflow-y: auto; z-index: 1000; margin-top: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"></div>
+                    </div>
+                    <div id="create_selectedFlagsContainer" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; min-height: 40px; padding: 10px; background: #f7fafc; border-radius: 6px;">
+                        <div style="color: #718096; font-size: 0.875rem;">No flags selected</div>
+                    </div>
+                    <input type="hidden" id="create_selectedFlagIds" name="flag_ids" value="">
+                </div>
                 <div class="form-actions">
                     <button type="button" class="btn-cancel" onclick="closeCreateTicketModal()">Cancel</button>
                     <button type="submit" class="btn-submit">Create</button>
@@ -574,6 +572,17 @@
                     <select id="edit_ticket_type_id" name="ticket_type_id">
                         <option value="">None</option>
                     </select>
+                </div>
+                <div class="form-group" style="position: relative;">
+                    <label>Flags</label>
+                    <div style="margin-bottom: 10px; position: relative;">
+                        <input type="text" id="edit_flagSearch" placeholder="Search flags to add..." style="width: 100%; padding: 10px; border: 2px solid #e2e8f0; border-radius: 6px; font-size: 0.9375rem;">
+                        <div id="edit_flagSearchResults" style="display: none; position: absolute; top: 100%; left: 0; right: 0; background: white; border: 2px solid #e2e8f0; border-radius: 6px; max-height: 200px; overflow-y: auto; z-index: 1000; margin-top: 4px; box-shadow: 0 4px 8px rgba(0,0,0,0.1);"></div>
+                    </div>
+                    <div id="edit_selectedFlagsContainer" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; min-height: 40px; padding: 10px; background: #f7fafc; border-radius: 6px;">
+                        <div style="color: #718096; font-size: 0.875rem;">No flags selected</div>
+                    </div>
+                    <input type="hidden" id="edit_selectedFlagIds" name="flag_ids" value="">
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn-cancel" onclick="closeEditTicketModal()">Cancel</button>
@@ -621,6 +630,7 @@
     // Ticket management
     let usersList = [];
     let ticketTypesList = [];
+    let flagsList = [];
     
     function loadUsers() {
         fetch('/crm/api/users')
@@ -643,6 +653,18 @@
             })
             .catch(error => {
                 console.error('Error loading ticket types:', error);
+            });
+    }
+    
+    function loadFlags() {
+        return fetch('/crm/api/ticket-flags')
+            .then(response => response.json())
+            .then(data => {
+                flagsList = data.flags;
+                initializeFlagSearch();
+            })
+            .catch(error => {
+                console.error('Error loading flags:', error);
             });
     }
     
@@ -689,6 +711,134 @@
         });
     }
     
+    let createSelectedFlags = [];
+    let editSelectedFlags = [];
+    
+    function updateSelectedFlagsDisplay(containerId, selectedFlags) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+        
+        if (selectedFlags.length === 0) {
+            container.innerHTML = '<div style="color: #718096; font-size: 0.875rem;">No flags selected</div>';
+        } else {
+            selectedFlags.forEach(flag => {
+                const flagBtn = document.createElement('span');
+                flagBtn.style.cssText = `font-size: 0.75rem; color: ${flag.text_color || '#FFFFFF'}; background: ${flag.color}; padding: 4px 12px; border-radius: 4px; display: inline-block; font-weight: 500; cursor: pointer;`;
+                flagBtn.textContent = flag.name;
+                
+                const removeBtn = document.createElement('span');
+                removeBtn.textContent = ' ×';
+                removeBtn.style.cssText = 'margin-left: 6px; font-weight: bold; opacity: 0.8;';
+                removeBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    if (containerId === 'create_selectedFlagsContainer') {
+                        createSelectedFlags = createSelectedFlags.filter(f => f.id !== flag.id);
+                        updateSelectedFlagsDisplay('create_selectedFlagsContainer', createSelectedFlags);
+                        document.getElementById('create_selectedFlagIds').value = JSON.stringify(createSelectedFlags.map(f => f.id));
+                    } else {
+                        editSelectedFlags = editSelectedFlags.filter(f => f.id !== flag.id);
+                        updateSelectedFlagsDisplay('edit_selectedFlagsContainer', editSelectedFlags);
+                        document.getElementById('edit_selectedFlagIds').value = JSON.stringify(editSelectedFlags.map(f => f.id));
+                    }
+                };
+                
+                flagBtn.appendChild(removeBtn);
+                container.appendChild(flagBtn);
+            });
+        }
+    }
+    
+    function setupFlagSearch(searchInputId, resultsId, containerId, selectedFlagsArray, hiddenInputId) {
+        const searchInput = document.getElementById(searchInputId);
+        const resultsContainer = document.getElementById(resultsId);
+        
+        if (!searchInput || !resultsContainer) {
+            console.warn(`Flag search elements not found: ${searchInputId} or ${resultsId}`);
+            return;
+        }
+        
+        // Remove existing event listeners by cloning the element
+        const newSearchInput = searchInput.cloneNode(true);
+        searchInput.parentNode.replaceChild(newSearchInput, searchInput);
+        
+        newSearchInput.addEventListener('input', function(e) {
+            const searchTerm = e.target.value.toLowerCase().trim();
+            
+            if (searchTerm.length === 0) {
+                resultsContainer.style.display = 'none';
+                return;
+            }
+            
+            if (!flagsList || flagsList.length === 0) {
+                resultsContainer.innerHTML = '<div style="padding: 10px; color: #718096; font-size: 0.875rem;">Loading flags...</div>';
+                resultsContainer.style.display = 'block';
+                return;
+            }
+            
+            const filtered = flagsList.filter(flag => 
+                flag.name.toLowerCase().includes(searchTerm) &&
+                !selectedFlagsArray.some(sf => sf.id === flag.id)
+            );
+            
+            if (filtered.length === 0) {
+                resultsContainer.innerHTML = '<div style="padding: 10px; color: #718096; font-size: 0.875rem;">No flags found</div>';
+                resultsContainer.style.display = 'block';
+            } else {
+                resultsContainer.innerHTML = '';
+                filtered.forEach(flag => {
+                    const item = document.createElement('div');
+                    item.style.cssText = `padding: 10px; cursor: pointer; border-bottom: 1px solid #e2e8f0; display: flex; align-items: center; gap: 8px;`;
+                    item.onmouseover = function() { this.style.background = '#f7fafc'; };
+                    item.onmouseout = function() { this.style.background = 'white'; };
+                    item.onclick = function() {
+                        selectedFlagsArray.push(flag);
+                        updateSelectedFlagsDisplay(containerId, selectedFlagsArray);
+                        document.getElementById(hiddenInputId).value = JSON.stringify(selectedFlagsArray.map(f => f.id));
+                        newSearchInput.value = '';
+                        resultsContainer.style.display = 'none';
+                    };
+                    
+                    const colorSpan = document.createElement('span');
+                    colorSpan.style.cssText = `width: 20px; height: 20px; border-radius: 4px; background-color: ${flag.color}; border: 1px solid #e2e8f0; display: inline-block;`;
+                    
+                    const textSpan = document.createElement('span');
+                    textSpan.textContent = flag.name;
+                    textSpan.style.fontSize = '0.875rem';
+                    
+                    item.appendChild(colorSpan);
+                    item.appendChild(textSpan);
+                    resultsContainer.appendChild(item);
+                });
+                resultsContainer.style.display = 'block';
+            }
+        });
+    }
+    
+    let flagSearchInitialized = false;
+    
+    function initializeFlagSearch() {
+        // Always re-initialize to ensure event listeners are set up
+        setupFlagSearch('create_flagSearch', 'create_flagSearchResults', 'create_selectedFlagsContainer', createSelectedFlags, 'create_selectedFlagIds');
+        setupFlagSearch('edit_flagSearch', 'edit_flagSearchResults', 'edit_selectedFlagsContainer', editSelectedFlags, 'edit_selectedFlagIds');
+        
+        // Close search results when clicking outside (only add once)
+        if (!flagSearchInitialized) {
+            document.addEventListener('click', function(e) {
+                const searchInputs = ['create_flagSearch', 'edit_flagSearch'];
+                const resultsContainers = ['create_flagSearchResults', 'edit_flagSearchResults'];
+                
+                searchInputs.forEach((inputId, index) => {
+                    const input = document.getElementById(inputId);
+                    const results = document.getElementById(resultsContainers[index]);
+                    if (input && results && !input.contains(e.target) && !results.contains(e.target)) {
+                        results.style.display = 'none';
+                    }
+                });
+            });
+            flagSearchInitialized = true;
+        }
+    }
+    
     function loadTickets() {
         fetch(`/crm/customers/${customerId}/tickets`)
             .then(response => response.json())
@@ -700,25 +850,51 @@
                     data.tickets.forEach(ticket => {
                         const card = document.createElement('div');
                         card.className = `ticket-card ${ticket.status === 'closed' ? 'closed' : ''}`;
+                        card.setAttribute('data-ticket-id', ticket.id);
+                        
+                        // Make card clickable to open edit modal
+                        card.addEventListener('click', function(e) {
+                            // Don't open if clicking on a link or button
+                            if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON') {
+                                return;
+                            }
+                            openEditTicketModal(ticket.id);
+                        });
                         
                         const statusClass = ticket.status === 'opened' ? 'opened' : 'closed';
                         const statusText = ticket.status.charAt(0).toUpperCase() + ticket.status.slice(1);
                         
-                        const dueDate = ticket.due_date ? new Date(ticket.due_date).toLocaleDateString() : 'No due date';
-                        const createdDate = ticket.created_at ? new Date(ticket.created_at).toLocaleDateString() : '-';
-                        
-                        const isOverdue = ticket.due_date && new Date(ticket.due_date) < new Date() && ticket.status === 'opened';
+                        const dueDate = ticket.due_date ? new Date(ticket.due_date).toISOString().split('T')[0] : 'No due date';
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const ticketDueDate = ticket.due_date ? new Date(ticket.due_date) : null;
+                        const isOverdue = ticketDueDate && ticketDueDate < today && ticket.status === 'opened';
                         const dueDateClass = isOverdue ? ' style="color: #e53e3e; font-weight: 600;"' : '';
+                        
+                        const flagsHtml = ticket.flags && ticket.flags.length > 0 
+                            ? ticket.flags.map(flag => 
+                                `<span style="font-size: 0.75rem; color: ${flag.text_color || '#FFFFFF'}; background: ${flag.color}; padding: 4px 12px; border-radius: 4px; display: inline-block; font-weight: 500;">
+                                    ${escapeHtml(flag.name)}
+                                </span>`
+                            ).join('')
+                            : '';
+                        
+                        // Truncate description to 500 characters
+                        let description = escapeHtml(ticket.description);
+                        const truncatedDescription = description.length > 500 ? description.substring(0, 500) + '...' : description;
                         
                         card.innerHTML = `
                             <div class="ticket-card-header">
-                                <span class="status-badge ${statusClass}" onclick="toggleTicketStatus(${ticket.id})" title="Click to toggle">
-                                    ${statusText}
-                                </span>
-                                ${ticket.ticket_type ? `<span style="font-size: 0.75rem; color: #718096; background: #f7fafc; padding: 4px 8px; border-radius: 4px;">${escapeHtml(ticket.ticket_type)}</span>` : ''}
+                                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                                    <span class="status-badge ${statusClass}" onclick="toggleTicketStatus(${ticket.id}); event.stopPropagation();" style="cursor: pointer;">
+                                        ${statusText}
+                                    </span>
+                                    ${ticket.ticket_type ? `<span style="font-size: 0.75rem; color: #718096; background: #f7fafc; padding: 4px 8px; border-radius: 4px;">${escapeHtml(ticket.ticket_type)}</span>` : ''}
+                                    ${flagsHtml}
+                                </div>
                             </div>
                             <div class="ticket-card-description">
-                                ${escapeHtml(ticket.description)}
+                                ${truncatedDescription}
                             </div>
                             <div class="ticket-card-meta">
                                 <div class="ticket-card-meta-item">
@@ -729,17 +905,6 @@
                                     <span class="ticket-card-meta-label">Owner:</span>
                                     <span>${escapeHtml(ticket.owner)}</span>
                                 </div>
-                                <div class="ticket-card-meta-item">
-                                    <span class="ticket-card-meta-label">Creator:</span>
-                                    <span>${escapeHtml(ticket.creator)}</span>
-                                </div>
-                                <div class="ticket-card-meta-item">
-                                    <span class="ticket-card-meta-label">Created:</span>
-                                    <span>${createdDate}</span>
-                                </div>
-                            </div>
-                            <div class="ticket-card-actions">
-                                <button class="btn-edit" onclick="openEditTicketModal(${ticket.id})">Edit</button>
                             </div>
                         `;
                         container.appendChild(card);
@@ -765,6 +930,27 @@
         document.getElementById('createTicketModal').classList.add('active');
         document.getElementById('createTicketForm').reset();
         
+        // Initialize flag search if not already done
+        if (flagsList.length > 0 && !flagSearchInitialized) {
+            initializeFlagSearch();
+        }
+        
+        // Reset flags
+        createSelectedFlags = [];
+        updateSelectedFlagsDisplay('create_selectedFlagsContainer', createSelectedFlags);
+        const createFlagIdsInput = document.getElementById('create_selectedFlagIds');
+        if (createFlagIdsInput) {
+            createFlagIdsInput.value = '';
+        }
+        const createFlagSearch = document.getElementById('create_flagSearch');
+        if (createFlagSearch) {
+            createFlagSearch.value = '';
+        }
+        const createFlagResults = document.getElementById('create_flagSearchResults');
+        if (createFlagResults) {
+            createFlagResults.style.display = 'none';
+        }
+        
         // Set owner to current user by default
         const createOwnerSelect = document.getElementById('create_owner_id');
         if (createOwnerSelect && currentUserId) {
@@ -781,6 +967,12 @@
         
         const formData = new FormData(event.target);
         formData.append('customer_id', customerId);
+        
+        // Add flag IDs
+        const flagIds = JSON.parse(document.getElementById('create_selectedFlagIds').value || '[]');
+        flagIds.forEach(flagId => {
+            formData.append('flag_ids', flagId);
+        });
         
         fetch('/crm/tickets/create', {
             method: 'POST',
@@ -820,10 +1012,10 @@
     }
     
     function openEditTicketModal(ticketId) {
-        fetch(`/crm/customers/${customerId}/tickets`)
+        fetch(`/crm/tickets/${ticketId}/data`)
             .then(response => response.json())
             .then(data => {
-                const ticket = data.tickets.find(t => t.id === ticketId);
+                const ticket = data.ticket;
                 if (ticket) {
                     document.getElementById('edit_ticket_id').value = ticket.id;
                     document.getElementById('edit_description').value = ticket.description;
@@ -835,13 +1027,17 @@
                         document.getElementById('edit_owner_id').value = owner.id;
                     }
                     
-                    // Set ticket type - need to find type ID by name
-                    if (ticket.ticket_type) {
-                        const type = ticketTypesList.find(t => t.name === ticket.ticket_type);
-                        if (type) {
-                            document.getElementById('edit_ticket_type_id').value = type.id;
-                        }
+                    // Set ticket type
+                    if (ticket.ticket_type_id) {
+                        document.getElementById('edit_ticket_type_id').value = ticket.ticket_type_id;
                     }
+                    
+                    // Set flags
+                    editSelectedFlags = ticket.flags || [];
+                    updateSelectedFlagsDisplay('edit_selectedFlagsContainer', editSelectedFlags);
+                    document.getElementById('edit_selectedFlagIds').value = JSON.stringify(editSelectedFlags.map(f => f.id));
+                    document.getElementById('edit_flagSearch').value = '';
+                    document.getElementById('edit_flagSearchResults').style.display = 'none';
                     
                     document.getElementById('editTicketModal').classList.add('active');
                 }
@@ -861,6 +1057,12 @@
         
         const ticketId = document.getElementById('edit_ticket_id').value;
         const formData = new FormData(event.target);
+        
+        // Add flag IDs
+        const flagIds = JSON.parse(document.getElementById('edit_selectedFlagIds').value || '[]');
+        flagIds.forEach(flagId => {
+            formData.append('flag_ids', flagId);
+        });
         
         fetch(`/crm/tickets/${ticketId}/edit`, {
             method: 'POST',
@@ -884,6 +1086,21 @@
     // Load users and ticket types on page load
     loadUsers();
     loadTicketTypes();
+    loadFlags();
+    
+    // Helper function to get status color
+    function getStatusColor(status) {
+        const statusLower = (status || '').toLowerCase();
+        if (statusLower === 'active') {
+            return '#48bb78'; // green
+        } else if (statusLower === 'new') {
+            return '#4299e1'; // blue
+        } else if (statusLower === 'inactive' || statusLower === 'discontinued') {
+            return '#e53e3e'; // red
+        } else {
+            return '#718096'; // gray
+        }
+    }
     
     // Load assortment data
     function loadAssortment() {
@@ -926,8 +1143,15 @@
                             yoyText = '-';
                         }
                         
+                        // Format ASIN status
+                        const asinStatus = item.asin_status || '-';
+                        const statusBadge = asinStatus !== '-' 
+                            ? `<span style="padding: 4px 12px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; background: ${getStatusColor(asinStatus)}; color: white;">${asinStatus}</span>`
+                            : '-';
+                        
                         row.innerHTML = `
                             <td>${itemCell}</td>
+                            <td>${statusBadge}</td>
                             <td>$${Math.round(item.revenues_2024).toLocaleString()}</td>
                             <td>$${Math.round(item.revenues_2025).toLocaleString()}</td>
                             <td><div class="yoy-growth-cell">${yoyFlag}${yoyText}</div></td>
@@ -935,13 +1159,13 @@
                         tbody.appendChild(row);
                     });
                 } else {
-                    tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 40px; color: #718096;">No assortment data found</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #718096;">No assortment data found</td></tr>';
                 }
             })
             .catch(error => {
                 console.error('Error loading assortment:', error);
                 document.getElementById('assortment-tbody').innerHTML = 
-                    '<tr><td colspan="4" style="text-align: center; padding: 40px; color: #e53e3e;">Error loading assortment data</td></tr>';
+                    '<tr><td colspan="5" style="text-align: center; padding: 40px; color: #e53e3e;">Error loading assortment data</td></tr>';
             });
     }
     

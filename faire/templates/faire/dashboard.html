@@ -1,0 +1,537 @@
+{% extends "base.html" %}
+
+{% block page_title_text %}Faire Dashboard{% endblock %}
+
+{% block extra_styles %}
+    .dashboard-container {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .revenue-boxes {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .revenue-box {
+        background: white;
+        border-radius: 8px;
+        padding: 25px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        border-left: 4px solid #667eea;
+    }
+    
+    .revenue-box h3 {
+        margin: 0 0 10px 0;
+        color: #4a5568;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .revenue-box .value {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #2d3748;
+    }
+    
+    .filter-section {
+        background: #f7fafc;
+        padding: 25px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .filter-rows {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .filter-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 20px;
+        align-items: end;
+    }
+    
+    @media (max-width: 1200px) {
+        .filter-row {
+            grid-template-columns: repeat(3, 1fr);
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .filter-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+    
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .filter-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #4a5568;
+        font-size: 0.875rem;
+    }
+    
+    .filter-group select,
+    .filter-group input {
+        width: 100%;
+        padding: 10px 15px;
+        font-size: 14px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        background: white;
+        transition: border-color 0.2s;
+    }
+    
+    .filter-group select:focus,
+    .filter-group input:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .filter-actions {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    
+    .btn-filter {
+        background: #667eea;
+        color: white;
+        padding: 12px 24px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        font-size: 14px;
+    }
+    
+    .btn-filter:hover {
+        background: #5568d3;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+    }
+    
+    .chart-container {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        position: relative;
+        height: 500px;
+    }
+    
+    .chart-loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 500px;
+        color: #718096;
+        font-size: 16px;
+    }
+    
+    .chart-error {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 500px;
+        color: #e53e3e;
+        font-size: 16px;
+        padding: 20px;
+        text-align: center;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="dashboard-container">
+        <div class="revenue-boxes">
+            <div class="revenue-box">
+                <h3>Total Revenues 2024</h3>
+                <div class="value">${{ "{:,.0f}".format(total_rev_2024) }}</div>
+            </div>
+            <div class="revenue-box">
+                <h3>Total Revenues 2025</h3>
+                <div class="value">${{ "{:,.0f}".format(total_rev_2025) }}</div>
+            </div>
+        </div>
+        
+        <div class="filter-section">
+            <form id="dashboardForm">
+                <div class="filter-rows">
+                    <div class="filter-row">
+                        <div class="filter-group">
+                            <label for="metric">Metric</label>
+                            <select id="metric" name="metric">
+                                <option value="revenues" selected>Revenues</option>
+                                <option value="units">Units</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="brand_id">Brand</label>
+                            <select id="brand_id" name="brand_id">
+                                <option value="">All Brands</option>
+                                {% for brand in brands %}
+                                <option value="{{ brand.id }}" {% if selected_brand_id == brand.id %}selected{% endif %}>{{ brand.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="customer_id">Customer</label>
+                            <select id="customer_id" name="customer_id">
+                                <option value="">All Customers</option>
+                                {% for customer in customers %}
+                                <option value="{{ customer.id }}" {% if selected_customer_id == customer.id %}selected{% endif %}>{{ customer.name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <label for="item_id">Item</label>
+                            <select id="item_id" name="item_id">
+                                <option value="">All Items</option>
+                                {% for item in items %}
+                                <option value="{{ item.id }}" data-brand-id="{{ item.brand_id }}" {% if selected_item_id == item.id %}selected{% endif %}>{{ item.brand.name }} - {{ item.essor_code or 'N/A' }} - {{ item.essor_name or 'N/A' }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="filter-actions">
+                    <button type="submit" class="btn-filter">📊 Update Chart</button>
+                </div>
+            </form>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="faireChart"></canvas>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script>
+        let chart = null;
+        
+        // Initialize chart
+        const ctx = document.getElementById('faireChart').getContext('2d');
+        
+        function initChart() {
+            if (chart) {
+                chart.destroy();
+            }
+            
+            chart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Revenues ($)',
+                        data: [],
+                        borderColor: 'rgb(102, 126, 234)',
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Faire Data',
+                            font: {
+                                size: 18,
+                                weight: 'bold'
+                            },
+                            padding: {
+                                bottom: 20
+                            }
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    if (value >= 1000000) {
+                                        return (value / 1000000).toFixed(1) + 'M';
+                                    } else if (value >= 1000) {
+                                        return (value / 1000).toFixed(1) + 'K';
+                                    }
+                                    return value.toLocaleString();
+                                }
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                maxTicksLimit: 12
+                            }
+                        }
+                    },
+                    interaction: {
+                        mode: 'nearest',
+                        axis: 'x',
+                        intersect: false
+                    }
+                }
+            });
+        }
+        
+        // Filter items based on brand selection
+        document.getElementById('brand_id').addEventListener('change', function() {
+            const brandId = this.value;
+            const itemSelect = document.getElementById('item_id');
+            
+            const itemOptions = itemSelect.querySelectorAll('option');
+            itemOptions.forEach(option => {
+                if (option.value === '') {
+                    option.style.display = '';
+                } else {
+                    const optionBrandId = option.getAttribute('data-brand-id');
+                    option.style.display = (brandId === '' || optionBrandId === brandId) ? '' : 'none';
+                }
+            });
+            
+            // Reset item selection if it becomes hidden
+            if (brandId !== '' && itemSelect.value !== '') {
+                const selectedItem = itemSelect.options[itemSelect.selectedIndex];
+                if (selectedItem.style.display === 'none') {
+                    itemSelect.value = '';
+                }
+            }
+            
+            // Update totals when brand changes
+            loadTotals();
+        });
+        
+        // Load chart data
+        function loadChartData() {
+            const form = document.getElementById('dashboardForm');
+            const formData = new FormData(form);
+            
+            // Build query string
+            const params = new URLSearchParams();
+            for (const [key, value] of formData.entries()) {
+                if (value) {
+                    params.append(key, value);
+                }
+            }
+            
+            // Show loading state
+            const chartContainer = document.querySelector('.chart-container');
+            chartContainer.innerHTML = '<div class="chart-loading">Loading chart data...</div>';
+            
+            // Fetch chart data
+            fetch(`{{ url_for('faire.api_chart_data') }}?${params.toString()}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        chartContainer.innerHTML = `<div class="chart-error">Error: ${data.error}</div>`;
+                        return;
+                    }
+                    
+                    // Restore canvas
+                    chartContainer.innerHTML = '<canvas id="faireChart"></canvas>';
+                    const ctx = document.getElementById('faireChart').getContext('2d');
+                    
+                    // Update or create chart
+                    if (chart) {
+                        chart.destroy();
+                    }
+                    
+                    // Build datasets array
+                    const datasets = [
+                        {
+                            label: '2025',
+                            data: data.values_2025,
+                            borderColor: 'rgb(59, 130, 246)',
+                            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            spanGaps: true
+                        },
+                        {
+                            label: '2024',
+                            data: data.values_2024,
+                            borderColor: 'rgb(239, 68, 68)',
+                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.4,
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            spanGaps: true
+                        }
+                    ];
+                    
+                    chart = new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: data.labels,
+                            datasets: datasets
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                title: {
+                                    display: true,
+                                    text: `Faire ${data.metric_label}`,
+                                    font: {
+                                        size: 18,
+                                        weight: 'bold'
+                                    },
+                                    padding: {
+                                        bottom: 20
+                                    }
+                                },
+                                legend: {
+                                    display: true,
+                                    position: 'top'
+                                },
+                                tooltip: {
+                                    mode: 'index',
+                                    intersect: false,
+                                    callbacks: {
+                                        label: function(context) {
+                                            if (context.parsed.y === null) {
+                                                return context.dataset.label + ': No data';
+                                            }
+                                            const value = context.parsed.y;
+                                            if (data.metric_label.includes('Revenues')) {
+                                                return context.dataset.label + ': $' + Math.round(value).toLocaleString();
+                                            } else {
+                                                return context.dataset.label + ': ' + Math.round(value).toLocaleString();
+                                            }
+                                        }
+                                    }
+                                }
+                            },
+                            scales: {
+                                y: {
+                                    beginAtZero: true,
+                                    ticks: {
+                                        callback: function(value) {
+                                            if (data.metric_label.includes('Revenues')) {
+                                                if (value >= 1000000) {
+                                                    return '$' + (value / 1000000).toFixed(1) + 'M';
+                                                } else if (value >= 1000) {
+                                                    return '$' + (value / 1000).toFixed(1) + 'K';
+                                                }
+                                                return '$' + value.toLocaleString();
+                                            } else {
+                                                if (value >= 1000000) {
+                                                    return (value / 1000000).toFixed(1) + 'M';
+                                                } else if (value >= 1000) {
+                                                    return (value / 1000).toFixed(1) + 'K';
+                                                }
+                                                return value.toLocaleString();
+                                            }
+                                        }
+                                    }
+                                },
+                                x: {
+                                    ticks: {
+                                        maxTicksLimit: 12
+                                    }
+                                }
+                            },
+                            interaction: {
+                                mode: 'nearest',
+                                axis: 'x',
+                                intersect: false
+                            }
+                        }
+                    });
+                })
+                .catch(error => {
+                    chartContainer.innerHTML = `<div class="chart-error">Error loading data: ${error.message}</div>`;
+                    console.error('Error:', error);
+                });
+        }
+        
+        // Function to load and update totals
+        function loadTotals() {
+            const form = document.getElementById('dashboardForm');
+            const formData = new FormData(form);
+            const params = new URLSearchParams();
+            
+            if (formData.get('brand_id')) {
+                params.append('brand_id', formData.get('brand_id'));
+            }
+            if (formData.get('item_id')) {
+                params.append('item_id', formData.get('item_id'));
+            }
+            if (formData.get('customer_id')) {
+                params.append('customer_id', formData.get('customer_id'));
+            }
+            
+            fetch(`{{ url_for('faire.api_totals') }}?${params.toString()}`)
+                .then(response => response.json())
+                .then(data => {
+                    // Update the revenue boxes
+                    const rev2024Element = document.querySelector('.revenue-box:first-child .value');
+                    const rev2025Element = document.querySelector('.revenue-box:last-child .value');
+                    
+                    if (rev2024Element) {
+                        rev2024Element.textContent = '$' + Math.round(data.total_rev_2024).toLocaleString();
+                    }
+                    if (rev2025Element) {
+                        rev2025Element.textContent = '$' + Math.round(data.total_rev_2025).toLocaleString();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading totals:', error);
+                });
+        }
+        
+        // Handle form submission
+        document.getElementById('dashboardForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            loadChartData();
+            loadTotals();
+        });
+        
+        // Update totals when filters change
+        document.getElementById('item_id').addEventListener('change', loadTotals);
+        document.getElementById('customer_id').addEventListener('change', loadTotals);
+        
+        // Initialize chart on page load
+        initChart();
+        
+        // Load initial data
+        loadChartData();
+    </script>
+{% endblock %}
+

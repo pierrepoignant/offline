@@ -1,5 +1,5 @@
 Flask==3.0.0
-psycopg2-binary==2.9.9
+psycopg2-binary==2.9.11
 Werkzeug==3.0.1
 gunicorn==21.2.0
 SQLAlchemy==2.0.23
@@ -8,4 +8,4 @@ Alembic==1.13.1
 snowflake-connector-python==3.7.0
 cryptography==41.0.7
 requests==2.31.0
-
+python-dotenv==1.0.0

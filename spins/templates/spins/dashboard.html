@@ -242,6 +242,7 @@
                             <option value="last_12_weeks" selected>Last 12 Weeks</option>
                             <option value="last_4_weeks">Last 4 Weeks</option>
                             <option value="year_to_date">Year to Date</option>
+                            <option value="since_jan_2024">Since Jan 1st 2024</option>
                             <option value="custom">Custom</option>
                         </select>
                     </div>
@@ -296,6 +297,13 @@
                 
                 <div class="filter-actions">
                     <button type="submit" class="btn-filter">📊 Update Chart</button>
+                </div>
+                
+                <div style="margin-top: 15px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                        <input type="checkbox" id="indexCheckbox" name="index" style="width: 18px; height: 18px; cursor: pointer;">
+                        <span>Index (start at 100)</span>
+                    </label>
                 </div>
             </form>
         </div>
@@ -375,10 +383,44 @@
         // Initialize count
         updateSelectedCount();
         
+        // Apply indexing to data - sets first non-zero value to 100 and calculates subsequent values relative to it
+        function applyIndexing(values) {
+            if (!values || values.length === 0) {
+                return values;
+            }
+            
+            // Find first non-zero value and its index
+            let firstValue = null;
+            let firstIndex = -1;
+            
+            for (let i = 0; i < values.length; i++) {
+                if (values[i] !== null && values[i] !== undefined && values[i] !== 0) {
+                    firstValue = values[i];
+                    firstIndex = i;
+                    break;
+                }
+            }
+            
+            // If no non-zero value found, return original values
+            if (firstValue === null || firstValue === 0) {
+                return values;
+            }
+            
+            // Transform all values relative to first value
+            return values.map(value => {
+                if (value === null || value === undefined) {
+                    return null;
+                }
+                // Calculate indexed value: 100 * (current / first)
+                return 100 * (value / firstValue);
+            });
+        }
+        
         // Load chart data
         function loadChartData() {
             const form = document.getElementById('dashboardForm');
             const formData = new FormData(form);
+            const indexEnabled = document.getElementById('indexCheckbox').checked;
             
             // Build query string - handle multiple brand selections
             const params = new URLSearchParams();
@@ -393,6 +435,9 @@
                             params.append('brand_id', brandId);
                         }
                     });
+                } else if (key === 'index') {
+                    // Skip the index checkbox from URL params, we handle it client-side
+                    continue;
                 } else if (value) {
                     params.append(key, value);
                 }
@@ -409,6 +454,19 @@
                     if (data.error) {
                         chartContainer.innerHTML = `<div class="chart-error">Error: ${data.error}</div>`;
                         return;
+                    }
+                    
+                    // Apply indexing if enabled
+                    if (indexEnabled) {
+                        if (data.brands_data && data.brands_data.length > 0) {
+                            // Apply indexing to each brand's values
+                            data.brands_data.forEach(brand => {
+                                brand.values = applyIndexing(brand.values);
+                            });
+                        } else if (data.values) {
+                            // Apply indexing to single dataset
+                            data.values = applyIndexing(data.values);
+                        }
                     }
                     
                     // Restore canvas
@@ -438,7 +496,7 @@
                     } else {
                         // Single dataset (no brands selected or aggregated)
                         datasets = [{
-                            label: data.metric_label,
+                            label: data.metric_label + (indexEnabled ? ' (Indexed)' : ''),
                             data: data.values,
                             borderColor: 'rgb(159, 122, 234)',
                             backgroundColor: 'rgba(159, 122, 234, 0.1)',
@@ -448,6 +506,12 @@
                             pointRadius: data.dates.length > 100 ? 0 : 3,
                             pointHoverRadius: 5
                         }];
+                    }
+                    
+                    // Update metric label for indexed display
+                    let displayMetricLabel = data.metric_label;
+                    if (indexEnabled) {
+                        displayMetricLabel = data.metric_label + ' (Indexed to 100)';
                     }
                     
                     chart = new Chart(ctx, {
@@ -462,7 +526,7 @@
                             plugins: {
                                 title: {
                                     display: true,
-                                    text: `SPINS ${data.metric_label} (${data.start_date} to ${data.end_date})`,
+                                    text: `SPINS ${displayMetricLabel} (${data.start_date} to ${data.end_date})`,
                                     font: {
                                         size: 18,
                                         weight: 'bold'
@@ -481,7 +545,9 @@
                                     callbacks: {
                                         label: function(context) {
                                             const value = context.parsed.y;
-                                            if (data.metric_label.includes('Revenues')) {
+                                            if (indexEnabled) {
+                                                return value.toFixed(2);
+                                            } else if (data.metric_label.includes('Revenues')) {
                                                 return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
                                             } else {
                                                 return value.toLocaleString();
@@ -492,10 +558,12 @@
                             },
                             scales: {
                                 y: {
-                                    beginAtZero: true,
+                                    beginAtZero: !indexEnabled,
                                     ticks: {
                                         callback: function(value) {
-                                            if (data.metric_label.includes('Revenues')) {
+                                            if (indexEnabled) {
+                                                return value.toFixed(0);
+                                            } else if (data.metric_label.includes('Revenues')) {
                                                 if (value >= 1000000) {
                                                     return '$' + (value / 1000000).toFixed(1) + 'M';
                                                 } else if (value >= 1000) {
@@ -544,6 +612,11 @@
         // Handle form submission
         document.getElementById('dashboardForm').addEventListener('submit', function(e) {
             e.preventDefault();
+            loadChartData();
+        });
+        
+        // Handle index checkbox change
+        document.getElementById('indexCheckbox').addEventListener('change', function() {
             loadChartData();
         });
         

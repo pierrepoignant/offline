@@ -14,7 +14,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 # Import app and models
 from app import create_app
 from models import db
-from models import Brand, Category, Channel, ChannelCustomer, Item, SellthroughData, ChannelItem, NetsuiteData, NetsuiteCode
+from models import Brand, Category, Channel, ChannelCustomer, Item, SellthroughData, ChannelItem, NetsuiteData, NetsuiteCode, TargetData
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

@@ -1,0 +1,128 @@
+{% extends "base.html" %}
+
+{% block page_title_text %}Sync Item Status & ASINs{% endblock %}
+
+{% block extra_styles %}
+    .sync-container {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .instructions {
+        background: #f7fafc;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 30px;
+        border-left: 4px solid #667eea;
+    }
+    
+    .instructions h3 {
+        margin: 0 0 15px 0;
+        color: #2d3748;
+        font-size: 1.125rem;
+    }
+    
+    .instructions ol {
+        margin: 0;
+        padding-left: 20px;
+        color: #4a5568;
+    }
+    
+    .instructions li {
+        margin-bottom: 8px;
+    }
+    
+    .instructions code {
+        background: #e2e8f0;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 0.875rem;
+    }
+    
+    .btn-update {
+        padding: 15px 30px;
+        background: #667eea;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 18px;
+        width: 100%;
+        max-width: 300px;
+        display: block;
+        margin: 0 auto;
+    }
+    
+    .btn-update:hover {
+        background: #5568d3;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+    }
+    
+    .btn-update:disabled {
+        background: #cbd5e0;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .form-container {
+        text-align: center;
+        padding: 20px 0;
+    }
+    
+    .loading {
+        display: none;
+        margin-top: 20px;
+        color: #667eea;
+        font-weight: 500;
+    }
+{% endblock %}
+
+{% block content %}
+<div class="sync-container">
+    <div class="instructions">
+        <h3>📋 Sync Process</h3>
+        <ol>
+            <li><strong>Step 1:</strong> Fetch latest items information from Snowflake using <code>asin_status.sql</code></li>
+            <li><strong>Step 2:</strong> Update all ASINs in the database with their status from Snowflake</li>
+            <li><strong>Step 3:</strong> Process all items:
+                <ul style="margin-top: 8px; padding-left: 20px;">
+                    <li>If an item doesn't have an ASIN linked, find the ASIN from Snowflake data (using <code>NETSUITE_ITEM_NUMBER</code> = <code>essor_code</code>)</li>
+                    <li>Create the ASIN in the database if it doesn't exist</li>
+                    <li>Link the item to the ASIN</li>
+                    <li>Update the item status from Snowflake data</li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+    
+    <div class="form-container">
+        <form method="POST" action="{{ url_for('sync.update') }}" id="sync-form">
+            <button type="submit" class="btn-update" id="update-btn">
+                🔄 Update Status & ASINs
+            </button>
+        </form>
+        <div class="loading" id="loading">
+            ⏳ Syncing... This may take a few moments.
+        </div>
+    </div>
+</div>
+
+<script>
+document.getElementById('sync-form').addEventListener('submit', function(e) {
+    const btn = document.getElementById('update-btn');
+    const loading = document.getElementById('loading');
+    
+    btn.disabled = true;
+    btn.textContent = '⏳ Updating...';
+    loading.style.display = 'block';
+});
+</script>
+{% endblock %}
+

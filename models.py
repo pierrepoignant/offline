@@ -34,6 +34,8 @@ class Brand(db.Model):
     customers = db.relationship('ChannelCustomer', back_populates='brand')
     sellthrough_data = db.relationship('SellthroughData', back_populates='brand')
     netsuite_data = db.relationship('NetsuiteData', back_populates='brand')
+    faire_data = db.relationship('FaireData', back_populates='brand')
+    targets_data = db.relationship('TargetData', back_populates='brand')
     
     def __repr__(self):
         return f'<Brand {self.name}>'
@@ -74,6 +76,7 @@ class Channel(db.Model):
     netsuite_data = db.relationship('NetsuiteData', back_populates='channel')
     channel_items = db.relationship('ChannelItem', back_populates='channel', cascade='all, delete-orphan')
     netsuite_codes = db.relationship('NetsuiteCode', back_populates='channel', cascade='all, delete-orphan')
+    targets_data = db.relationship('TargetData', back_populates='channel')
     
     def __repr__(self):
         return f'<Channel {self.name}>'
@@ -113,6 +116,7 @@ class ChannelCustomer(db.Model):
     customer_type = db.relationship('ChannelCustomerType', back_populates='customers')
     sellthrough_data = db.relationship('SellthroughData', back_populates='customer')
     netsuite_data = db.relationship('NetsuiteData', back_populates='customer')
+    faire_data = db.relationship('FaireData', back_populates='customer')
     netsuite_codes = db.relationship('NetsuiteCode', back_populates='customer')
     
     # Unique constraint on name per channel
@@ -133,6 +137,7 @@ class Asin(db.Model):
     scraped_at = db.Column(db.Date, nullable=True)
     scraped_json = db.Column(db.Text, nullable=True)  # JSON string of scraped data from Pangolin
     scraped_json_rapid = db.Column(db.Text, nullable=True)  # JSON string of scraped data from RapidAPI
+    status = db.Column(db.String(255), nullable=True)  # Product status from Snowflake (Active, New, etc.)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
@@ -152,6 +157,7 @@ class Item(db.Model):
     brand_id = db.Column(db.Integer, db.ForeignKey('brands.id'), nullable=False)
     category_id = db.Column(db.Integer, db.ForeignKey('categories.id'), nullable=True)
     asin_id = db.Column(db.Integer, db.ForeignKey('asins.id'), nullable=True)
+    status = db.Column(db.String(255), nullable=True)  # Product status from Snowflake (Active, New, etc.)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
@@ -160,6 +166,7 @@ class Item(db.Model):
     asin_obj = db.relationship('Asin', back_populates='items')
     sellthrough_data = db.relationship('SellthroughData', back_populates='item')
     netsuite_data = db.relationship('NetsuiteData', back_populates='item')
+    faire_data = db.relationship('FaireData', back_populates='item')
     channel_items = db.relationship('ChannelItem', back_populates='item', cascade='all, delete-orphan')
     
     def __repr__(self):
@@ -194,14 +201,18 @@ class SellthroughData(db.Model):
     
     id = db.Column(db.Integer, primary_key=True)
     date = db.Column(db.Date, nullable=False)
-    brand_id = db.Column(db.Integer, db.ForeignKey('brands.id'), nullable=False)
-    item_id = db.Column(db.Integer, db.ForeignKey('items.id'), nullable=False)
+    brand_id = db.Column(db.Integer, db.ForeignKey('brands.id'), nullable=True)
+    item_id = db.Column(db.Integer, db.ForeignKey('items.id'), nullable=True)
     channel_id = db.Column(db.Integer, db.ForeignKey('channels.id'), nullable=False)
     customer_id = db.Column(db.Integer, db.ForeignKey('channel_customers.id'), nullable=True)
     revenues = db.Column(db.Numeric(12, 2), nullable=False, default=0)
     units = db.Column(db.Integer, nullable=False, default=0)
     stores = db.Column(db.Integer, nullable=False, default=0)
     oos = db.Column(db.Numeric(5, 2), nullable=True)  # Out of stock percentage (stored as 100, so 50% = 50)
+    usd_pspw = db.Column(db.Numeric(12, 2), nullable=True)  # USD per store per week
+    units_pspw = db.Column(db.Numeric(10, 2), nullable=True)  # Units per store per week
+    instock = db.Column(db.Numeric(5, 2), nullable=True)  # In stock percentage
+    channel_code = db.Column(db.String(255), nullable=True)  # Channel code
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -256,6 +267,37 @@ class NetsuiteData(db.Model):
     
     def __repr__(self):
         return f'<NetsuiteData {self.date} - Item: {self.item_id}>'
+
+
+class FaireData(db.Model):
+    """Faire revenue data model"""
+    __tablename__ = 'faire_data'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.Date, nullable=False)
+    brand_id = db.Column(db.Integer, db.ForeignKey('brands.id'), nullable=False)
+    item_id = db.Column(db.Integer, db.ForeignKey('items.id'), nullable=False)
+    customer_id = db.Column(db.Integer, db.ForeignKey('channel_customers.id'), nullable=True)
+    revenues = db.Column(db.Numeric(12, 2), nullable=False, default=0)
+    units = db.Column(db.Integer, nullable=False, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    brand = db.relationship('Brand', back_populates='faire_data')
+    item = db.relationship('Item', back_populates='faire_data')
+    customer = db.relationship('ChannelCustomer', back_populates='faire_data')
+    
+    # Index for faster queries
+    __table_args__ = (
+        db.Index('idx_faire_date', 'date'),
+        db.Index('idx_faire_brand_date', 'brand_id', 'date'),
+        db.Index('idx_faire_item_date', 'item_id', 'date'),
+        db.UniqueConstraint('date', 'item_id', 'customer_id', name='uq_faire_unique'),
+    )
+    
+    def __repr__(self):
+        return f'<FaireData {self.date} - Item: {self.item_id}>'
 
 
 class NetsuiteCode(db.Model):
@@ -328,6 +370,7 @@ class SpinsBrand(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(255), nullable=False, unique=True)
     short_name = db.Column(db.String(100), nullable=True)
+    domain = db.Column(db.String(255), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
@@ -446,6 +489,63 @@ class CrmTicket(db.Model):
         db.Index('idx_crm_ticket_due_date', 'due_date'),
     )
     
+    # Many-to-many relationship with flags
+    flags = db.relationship('CrmTicketFlag', secondary='crm_tickets_x_flags', back_populates='tickets', lazy='dynamic')
+    
     def __repr__(self):
         return f'<CrmTicket {self.id} - {self.status}>'
+
+
+# Junction table for many-to-many relationship between tickets and flags
+crm_tickets_x_flags = db.Table('crm_tickets_x_flags',
+    db.Column('ticket_id', db.Integer, db.ForeignKey('crm_tickets.id', ondelete='CASCADE'), primary_key=True),
+    db.Column('flag_id', db.Integer, db.ForeignKey('crm_ticket_flags.id', ondelete='CASCADE'), primary_key=True),
+    db.Index('idx_ticket_flag_ticket', 'ticket_id'),
+    db.Index('idx_ticket_flag_flag', 'flag_id')
+)
+
+
+class CrmTicketFlag(db.Model):
+    """CRM Ticket Flag model"""
+    __tablename__ = 'crm_ticket_flags'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(255), nullable=False, unique=True)
+    color = db.Column(db.String(7), nullable=False)  # Hex color code for background
+    text_color = db.Column(db.String(7), nullable=False, default='#FFFFFF')  # Hex color code for text
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    
+    # Relationships
+    tickets = db.relationship('CrmTicket', secondary='crm_tickets_x_flags', back_populates='flags', lazy='dynamic')
+    
+    def __repr__(self):
+        return f'<CrmTicketFlag {self.name}>'
+
+
+class TargetData(db.Model):
+    """Target data model - revenue targets by month, channel, and brand"""
+    __tablename__ = 'targets_data'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    date = db.Column(db.Date, nullable=False)  # First day of the month
+    brand_id = db.Column(db.Integer, db.ForeignKey('brands.id'), nullable=False)
+    channel_id = db.Column(db.Integer, db.ForeignKey('channels.id'), nullable=False)
+    revenue = db.Column(db.Numeric(12, 2), nullable=False, default=0)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships
+    brand = db.relationship('Brand', back_populates='targets_data')
+    channel = db.relationship('Channel', back_populates='targets_data')
+    
+    # Index for faster queries
+    __table_args__ = (
+        db.Index('idx_targets_date', 'date'),
+        db.Index('idx_targets_brand_date', 'brand_id', 'date'),
+        db.Index('idx_targets_channel_date', 'channel_id', 'date'),
+        db.UniqueConstraint('date', 'brand_id', 'channel_id', name='uq_targets_unique'),
+    )
+    
+    def __repr__(self):
+        return f'<TargetData {self.date} - Brand: {self.brand_id}, Channel: {self.channel_id}>'
 

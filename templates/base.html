@@ -236,9 +236,11 @@
                         <button class="dropdown-toggle">👥 Customers</button>
                         <div class="dropdown-content">
                             <a href="{{ url_for('core.customers_list') }}">📋 View All</a>
+                            <a href="{{ url_for('core.customers_assortment_by_channel') }}">📦 Assortment by Channel</a>
                             <a href="{{ url_for('crm.all_tickets') }}">🎫 All Tickets</a>
-                            <a href="{{ url_for('crm.ticket_types_list') }}">🏷️ Ticket Types</a>
+                            <a href="{{ url_for('crm.ticket_types_list') }}">🏷️ Ticket Types and Flags</a>
                             <a href="{{ url_for('core.customer_types_list') }}">📑 Customer Types</a>
+                            <a href="{{ url_for('targets.brands_list') }}">🎯 Targets</a>
                         </div>
                     </div>
                     
@@ -248,6 +250,7 @@
                         <div class="dropdown-content">
                             <a href="{{ url_for('sellthrough.dashboard') }}">📊 Dashboard</a>
                             <a href="{{ url_for('sellthrough.index') }}">📋 View All</a>
+                            <a href="{{ url_for('sellthrough.unlinked') }}">🔗 Link Unlinked Data</a>
                             {% if session.is_admin %}
                             <a href="{{ url_for('sellthrough.import_data') }}">📥 Import CSV</a>
                             {% endif %}
@@ -263,6 +266,18 @@
                             {% if session.is_admin %}
                             <a href="{{ url_for('netsuite.import_data') }}">📥 Import from Snowflake</a>
                             <a href="{{ url_for('netsuite.netsuite_codes_list') }}">🏷️ Netsuite Codes</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <!-- Faire Dropdown -->
+                    <div class="dropdown">
+                        <button class="dropdown-toggle">🛍️ Faire</button>
+                        <div class="dropdown-content">
+                            <a href="{{ url_for('faire.dashboard') }}">📊 Dashboard</a>
+                            <a href="{{ url_for('faire.index') }}">📋 View All</a>
+                            {% if session.is_admin %}
+                            <a href="{{ url_for('faire.import_data') }}">📥 Import from Snowflake</a>
                             {% endif %}
                         </div>
                     </div>
@@ -291,6 +306,7 @@
                         <div class="dropdown-content">
                             <a href="{{ url_for('auth.users_list') }}">👥 Users</a>
                             <a href="{{ url_for('imports.import_errors_list') }}">📋 Import Log</a>
+                            <a href="{{ url_for('sync.index') }}">🔄 Sync Status & ASINs</a>
                         </div>
                     </div>
                     {% endif %}

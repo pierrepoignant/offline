@@ -3,9 +3,15 @@
 Flask app for offline team utilities
 """
 
-from flask import Flask, session, render_template, redirect, url_for
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+from flask import Flask, session, render_template, redirect, url_for, request
 import argparse
+from auth.blueprint import login_required
 
 def create_app(db_type=None):
     """Create and configure the Flask app
@@ -34,6 +40,9 @@ def create_app(db_type=None):
     from imports.blueprint import import_bp
     from scraping.blueprint import scraping_bp
     from crm.blueprint import crm_bp
+    from targets.blueprint import targets_bp
+    from faire.blueprint import faire_bp
+    from sync.blueprint import sync_bp
     
     # Register blueprints
     app.register_blueprint(auth_bp, url_prefix='/auth')
@@ -44,6 +53,9 @@ def create_app(db_type=None):
     app.register_blueprint(import_bp, url_prefix='/imports')
     app.register_blueprint(scraping_bp, url_prefix='/scraping')
     app.register_blueprint(crm_bp, url_prefix='/crm')
+    app.register_blueprint(targets_bp, url_prefix='/targets')
+    app.register_blueprint(faire_bp, url_prefix='/faire')
+    app.register_blueprint(sync_bp, url_prefix='/sync')
     
     @app.route('/')
     def index():
@@ -53,6 +65,55 @@ def create_app(db_type=None):
         
         return render_template('home.html',
                              username=session.get('username'))
+    
+    @app.route('/products')
+    @login_required
+    def products():
+        """Products dashboard - display all products as cards with search, filter, and pagination"""
+        from models import Item, Brand
+        from sqlalchemy import or_
+        
+        # Get query parameters
+        search_query = request.args.get('search', '').strip()
+        brand_id = request.args.get('brand_id', type=int)
+        page = request.args.get('page', 1, type=int)
+        per_page = 24  # Items per page
+        
+        # Build base query
+        query = Item.query.join(Brand)
+        
+        # Apply search filter (search in essor_name and essor_code)
+        if search_query:
+            query = query.filter(
+                or_(
+                    Item.essor_name.ilike(f'%{search_query}%'),
+                    Item.essor_code.ilike(f'%{search_query}%')
+                )
+            )
+        
+        # Apply brand filter
+        if brand_id:
+            query = query.filter(Item.brand_id == brand_id)
+        
+        # Order by brand name and item code
+        query = query.order_by(Brand.name, Item.essor_code)
+        
+        # Paginate results
+        pagination = query.paginate(
+            page=page,
+            per_page=per_page,
+            error_out=False
+        )
+        
+        # Get all brands for the filter dropdown
+        brands = Brand.query.order_by(Brand.name).all()
+        
+        return render_template('products.html', 
+                             items=pagination.items,
+                             pagination=pagination,
+                             brands=brands,
+                             search_query=search_query,
+                             selected_brand_id=brand_id)
     
     return app
 

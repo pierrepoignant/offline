@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block page_title_text %}👁️ View Targets - {{ brand.name }}{% endblock %}
+
+{% block extra_styles %}
+    .view-container {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .view-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 2px solid #e2e8f0;
+    }
+    
+    .year-selector {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .year-selector select {
+        padding: 10px 15px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    
+    .year-selector select:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .targets-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+    }
+    
+    .targets-table thead {
+        background: #667eea;
+        color: white;
+        position: sticky;
+        top: 0;
+    }
+    
+    .targets-table th {
+        padding: 12px;
+        text-align: center;
+        font-weight: 600;
+        font-size: 0.875rem;
+    }
+    
+    .targets-table th:first-child {
+        text-align: left;
+        position: sticky;
+        left: 0;
+        background: #667eea;
+        z-index: 2;
+    }
+    
+    .targets-table td {
+        padding: 12px;
+        border-bottom: 1px solid #e2e8f0;
+        text-align: right;
+    }
+    
+    .targets-table td:first-child {
+        text-align: left;
+        font-weight: 600;
+        position: sticky;
+        left: 0;
+        background: white;
+        z-index: 1;
+    }
+    
+    .targets-table tbody tr:hover td:first-child {
+        background: #f7fafc;
+    }
+    
+    .targets-table tbody tr:hover {
+        background: #f7fafc;
+    }
+    
+    .targets-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .revenue-value {
+        font-weight: 500;
+        color: #2d3748;
+    }
+    
+    .revenue-zero {
+        color: #a0aec0;
+    }
+    
+    .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        display: inline-block;
+        font-size: 14px;
+    }
+    
+    .btn-edit {
+        background: #48bb78;
+        color: white;
+    }
+    
+    .btn-edit:hover {
+        background: #38a169;
+        transform: translateY(-1px);
+    }
+    
+    .btn-secondary {
+        background: #e2e8f0;
+        color: #4a5568;
+    }
+    
+    .btn-secondary:hover {
+        background: #cbd5e0;
+    }
+    
+    .scroll-container {
+        overflow-x: auto;
+        max-width: 100%;
+    }
+    
+    .no-data {
+        text-align: center;
+        padding: 60px 20px;
+        color: #718096;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="view-container">
+        <div class="view-header">
+            <h2 style="margin: 0; color: #2d3748;">Targets for {{ brand.name }}</h2>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <div class="year-selector">
+                    <label for="year-select" style="font-weight: 600;">Year:</label>
+                    <select id="year-select" onchange="window.location.href='{{ url_for('targets.view_brand_targets', brand_id=brand.id) }}?year=' + this.value">
+                        {% for y in available_years %}
+                        <option value="{{ y }}" {% if y == year %}selected{% endif %}>{{ y }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <a href="{{ url_for('targets.edit_brand_targets', brand_id=brand.id, year=year) }}" class="btn btn-edit">✏️ Edit</a>
+                <a href="{{ url_for('targets.brands_list') }}" class="btn btn-secondary">← Back</a>
+            </div>
+        </div>
+        
+        {% if channels %}
+        <div class="scroll-container">
+            <table class="targets-table">
+                <thead>
+                    <tr>
+                        <th>Channel</th>
+                        {% for month_name in month_names %}
+                        <th>{{ month_name[:3] }}</th>
+                        {% endfor %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for channel in channels %}
+                    <tr>
+                        <td>{{ channel.name }}</td>
+                        {% for month in range(1, 13) %}
+                        <td>
+                            {% set revenue = targets_dict.get((channel.id, month), 0) %}
+                            <span class="revenue-value {% if revenue == 0 %}revenue-zero{% endif %}">
+                                {% if revenue > 0 %}
+                                    ${{ "{:,.2f}".format(revenue) }}
+                                {% else %}
+                                    -
+                                {% endif %}
+                            </span>
+                        </td>
+                        {% endfor %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="no-data">
+            <h3>No targets found for {{ brand.name }} in {{ year }}</h3>
+            <p>Click "Edit" to add targets for this brand and year.</p>
+        </div>
+        {% endif %}
+    </div>
+{% endblock %}
+

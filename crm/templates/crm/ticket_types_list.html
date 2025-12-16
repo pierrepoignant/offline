@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block page_title_text %}🏷️ Ticket Types{% endblock %}
+{% block page_title_text %}🏷️ Ticket Types & Flags{% endblock %}
 
 {% block extra_styles %}
     .header-actions {
@@ -10,11 +10,24 @@
         margin-bottom: 20px;
     }
     
-    .table-container {
+    .section-container {
         background: white;
         border-radius: 8px;
         overflow: hidden;
         box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+    }
+    
+    .section-header {
+        background: #667eea;
+        color: white;
+        padding: 15px 20px;
+        font-weight: 600;
+        font-size: 1.1rem;
+    }
+    
+    .table-container {
+        padding: 0;
     }
     
     .data-table {
@@ -23,21 +36,22 @@
     }
     
     .data-table thead {
-        background: #667eea;
-        color: white;
+        background: #f7fafc;
+        color: #4a5568;
     }
     
     .data-table th {
-        padding: 15px;
+        padding: 15px 20px;
         text-align: left;
         font-weight: 600;
         font-size: 0.875rem;
         text-transform: uppercase;
         letter-spacing: 0.5px;
+        border-bottom: 2px solid #e2e8f0;
     }
     
     .data-table td {
-        padding: 15px;
+        padding: 15px 20px;
         border-bottom: 1px solid #e2e8f0;
     }
     
@@ -59,6 +73,7 @@
         display: inline-block;
         border: none;
         cursor: pointer;
+        margin-right: 5px;
     }
     
     .btn-edit {
@@ -93,55 +108,127 @@
     
     .no-data {
         text-align: center;
-        padding: 60px 20px;
+        padding: 40px 20px;
         color: #718096;
+    }
+    
+    .flag-color {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+        border: 1px solid #e2e8f0;
+        vertical-align: middle;
+        margin-right: 8px;
+    }
+    
+    .section-actions {
+        display: flex;
+        gap: 10px;
+        align-items: center;
     }
 {% endblock %}
 
 {% block content %}
-    <div class="header-actions">
-        <h2 style="margin: 0; color: #2d3748;">All Ticket Types</h2>
-        {% if session.is_admin %}
-        <a href="{{ url_for('crm.create_ticket_type') }}" class="btn-small btn-add">➕ Add Ticket Type</a>
-        {% endif %}
+    <!-- Ticket Types Section -->
+    <div class="section-container">
+        <div class="section-header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Ticket Types</span>
+                {% if session.is_admin %}
+                <a href="{{ url_for('crm.create_ticket_type') }}" class="btn-small btn-add" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3);">➕ Add Ticket Type</a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="table-container">
+            {% if ticket_types %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        {% if session.is_admin %}
+                        <th>Actions</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ticket_type in ticket_types %}
+                    <tr>
+                        <td><strong>{{ ticket_type.name }}</strong></td>
+                        {% if session.is_admin %}
+                        <td>
+                            <a href="{{ url_for('crm.edit_ticket_type', ticket_type_id=ticket_type.id) }}" class="btn-small btn-edit">Edit</a>
+                            <form method="POST" action="{{ url_for('crm.delete_ticket_type', ticket_type_id=ticket_type.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete ticket type {{ ticket_type.name }}?');">
+                                <button type="submit" class="btn-small btn-delete">Delete</button>
+                            </form>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="no-data">
+                <p>No ticket types found.</p>
+                {% if session.is_admin %}
+                <a href="{{ url_for('crm.create_ticket_type') }}" class="btn-small btn-add" style="margin-top: 20px;">➕ Add Ticket Type</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
     </div>
     
-    {% if ticket_types %}
-    <div class="table-container">
-        <table class="data-table">
-            <thead>
-                <tr>
-                    <th>Name</th>
-                    {% if session.is_admin %}
-                    <th>Actions</th>
-                    {% endif %}
-                </tr>
-            </thead>
-            <tbody>
-                {% for ticket_type in ticket_types %}
-                <tr>
-                    <td><strong>{{ ticket_type.name }}</strong></td>
-                    {% if session.is_admin %}
-                    <td>
-                        <a href="{{ url_for('crm.edit_ticket_type', ticket_type_id=ticket_type.id) }}" class="btn-small btn-edit">Edit</a>
-                        <form method="POST" action="{{ url_for('crm.delete_ticket_type', ticket_type_id=ticket_type.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete ticket type {{ ticket_type.name }}?');">
-                            <button type="submit" class="btn-small btn-delete">Delete</button>
-                        </form>
-                    </td>
-                    {% endif %}
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <!-- Flags Section -->
+    <div class="section-container">
+        <div class="section-header">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span>Ticket Flags</span>
+                {% if session.is_admin %}
+                <a href="{{ url_for('crm.create_ticket_flag') }}" class="btn-small btn-add" style="background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.3);">➕ Add Flag</a>
+                {% endif %}
+            </div>
+        </div>
+        <div class="table-container">
+            {% if flags %}
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Color</th>
+                        {% if session.is_admin %}
+                        <th>Actions</th>
+                        {% endif %}
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for flag in flags %}
+                    <tr>
+                        <td><strong>{{ flag.name }}</strong></td>
+                        <td>
+                            <span class="flag-color" style="background-color: {{ flag.color }}; border-color: {{ flag.text_color }};"></span>
+                            <span style="font-family: monospace; color: #718096;">{{ flag.color }}</span>
+                            <span style="margin-left: 10px; font-family: monospace; color: #718096;">Text: {{ flag.text_color }}</span>
+                        </td>
+                        {% if session.is_admin %}
+                        <td>
+                            <a href="{{ url_for('crm.edit_ticket_flag', flag_id=flag.id) }}" class="btn-small btn-edit">Edit</a>
+                            <form method="POST" action="{{ url_for('crm.delete_ticket_flag', flag_id=flag.id) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete flag {{ flag.name }}?');">
+                                <button type="submit" class="btn-small btn-delete">Delete</button>
+                            </form>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <div class="no-data">
+                <p>No flags found.</p>
+                {% if session.is_admin %}
+                <a href="{{ url_for('crm.create_ticket_flag') }}" class="btn-small btn-add" style="margin-top: 20px;">➕ Add Flag</a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
     </div>
-    {% else %}
-    <div class="no-data">
-        <h3>No ticket types found</h3>
-        <p>Create your first ticket type to get started.</p>
-        {% if session.is_admin %}
-        <a href="{{ url_for('crm.create_ticket_type') }}" class="btn-small btn-add" style="margin-top: 20px;">➕ Add Ticket Type</a>
-        {% endif %}
-    </div>
-    {% endif %}
 {% endblock %}
-

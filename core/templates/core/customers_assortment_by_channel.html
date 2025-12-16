@@ -1,0 +1,565 @@
+{% extends "base.html" %}
+
+{% block page_title_text %}📦 Assortment by Channel{% endblock %}
+
+{% block extra_styles %}
+    .filters-container {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 30px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .filters-form {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 20px;
+        align-items: end;
+    }
+    
+    .filter-group {
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .filter-group label {
+        margin-bottom: 8px;
+        font-weight: 600;
+        color: #4a5568;
+        font-size: 0.875rem;
+    }
+    
+    .filter-group select {
+        padding: 12px;
+        border: 2px solid #e2e8f0;
+        border-radius: 6px;
+        font-size: 0.9375rem;
+    }
+    
+    .filter-group select:focus {
+        outline: none;
+        border-color: #667eea;
+    }
+    
+    .btn-load {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.9375rem;
+        transition: background 0.2s;
+    }
+    
+    .btn-load:hover {
+        background: #5568d3;
+    }
+    
+    .btn-load:disabled {
+        background: #cbd5e0;
+        cursor: not-allowed;
+    }
+    
+    .assortment-table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .assortment-table thead {
+        background: #667eea;
+        color: white;
+    }
+    
+    .assortment-table th {
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .assortment-table th:nth-child(3),
+    .assortment-table th:nth-child(4),
+    .assortment-table th:nth-child(5) {
+        text-align: right;
+    }
+    
+    .sortable-header {
+        cursor: pointer;
+        user-select: none;
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+    
+    .sortable-header:hover {
+        opacity: 0.8;
+    }
+    
+    .sort-arrow {
+        font-size: 0.75rem;
+        opacity: 0.7;
+    }
+    
+    .sort-arrow.active {
+        opacity: 1;
+    }
+    
+    .pagination-container {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-top: 20px;
+        padding: 20px;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .pagination-info {
+        color: #4a5568;
+        font-size: 0.875rem;
+        margin: 0 10px;
+    }
+    
+    .pagination-button {
+        background: #667eea;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.875rem;
+        transition: background 0.2s;
+    }
+    
+    .pagination-button:hover:not(:disabled) {
+        background: #5568d3;
+    }
+    
+    .pagination-button:disabled {
+        background: #cbd5e0;
+        cursor: not-allowed;
+    }
+    
+    .assortment-table td {
+        padding: 15px;
+        border-bottom: 1px solid #e2e8f0;
+        vertical-align: middle;
+    }
+    
+    .assortment-table td:nth-child(3),
+    .assortment-table td:nth-child(4),
+    .assortment-table td:nth-child(5) {
+        text-align: right;
+    }
+    
+    .assortment-table tbody tr:hover {
+        background: #f7fafc;
+    }
+    
+    .item-img {
+        max-width: 60px;
+        max-height: 60px;
+        width: auto;
+        height: auto;
+        object-fit: contain;
+        border-radius: 4px;
+        margin-right: 10px;
+        vertical-align: middle;
+    }
+    
+    .item-code-cell {
+        display: flex;
+        align-items: center;
+    }
+    
+    .yoy-growth-cell {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+    
+    .yoy-flag {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+    
+    .yoy-flag.green {
+        background-color: #48bb78;
+    }
+    
+    .yoy-flag.blue {
+        background-color: #4299e1;
+    }
+    
+    .yoy-flag.orange {
+        background-color: #ed8936;
+    }
+    
+    .yoy-flag.red {
+        background-color: #e53e3e;
+    }
+    
+    .no-selection {
+        text-align: center;
+        padding: 60px 20px;
+        color: #718096;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .chart-loading {
+        text-align: center;
+        padding: 40px;
+        color: #718096;
+    }
+{% endblock %}
+
+{% block content %}
+    <div class="filters-container">
+        <form id="filterForm" class="filters-form">
+            <div class="filter-group">
+                <label for="channel_id">Channel *</label>
+                <select id="channel_id" name="channel_id" required>
+                    <option value="">Select Channel</option>
+                    {% for channel in channels %}
+                    <option value="{{ channel.id }}">{{ channel.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <label for="brand_id">Brand *</label>
+                <select id="brand_id" name="brand_id" required>
+                    <option value="">Select Brand</option>
+                    {% for brand in brands %}
+                    <option value="{{ brand.id }}">{{ brand.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="filter-group">
+                <button type="submit" class="btn-load" id="loadButton" disabled>Load Assortment</button>
+            </div>
+        </form>
+    </div>
+    
+    <div id="assortment-container">
+        <div class="no-selection">
+            <h3>Select Channel and Brand</h3>
+            <p>Please select a channel and brand to view the assortment.</p>
+        </div>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    console.log('[ASSORTMENT] Script loading...');
+    
+    const channelSelect = document.getElementById('channel_id');
+    const brandSelect = document.getElementById('brand_id');
+    const loadButton = document.getElementById('loadButton');
+    const filterForm = document.getElementById('filterForm');
+    const assortmentContainer = document.getElementById('assortment-container');
+    
+    console.log('[ASSORTMENT] Elements found:', {
+        channelSelect: !!channelSelect,
+        brandSelect: !!brandSelect,
+        loadButton: !!loadButton,
+        filterForm: !!filterForm,
+        assortmentContainer: !!assortmentContainer
+    });
+    
+    // Sorting and pagination state
+    let currentSortBy = 'revenues_2025';
+    let currentSortOrder = 'desc';
+    let currentPage = 1;
+    let paginationData = null;
+    
+    console.log('[ASSORTMENT] Initial state:', {
+        currentSortBy,
+        currentSortOrder,
+        currentPage
+    });
+    
+    // Enable/disable load button based on selections
+    function updateLoadButton() {
+        const channelSelected = channelSelect.value !== '';
+        const brandSelected = brandSelect.value !== '';
+        loadButton.disabled = !(channelSelected && brandSelected);
+    }
+    
+    channelSelect.addEventListener('change', updateLoadButton);
+    brandSelect.addEventListener('change', updateLoadButton);
+    
+    // Load assortment when form is submitted
+    filterForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        console.log('[ASSORTMENT] Form submitted');
+        currentPage = 1; // Reset to first page
+        loadAssortment();
+    });
+    
+    function loadAssortment() {
+        console.log('[ASSORTMENT] loadAssortment() called');
+        const channelId = channelSelect.value;
+        const brandId = brandSelect.value;
+        
+        console.log('[ASSORTMENT] Channel ID:', channelId, 'Brand ID:', brandId);
+        
+        if (!channelId || !brandId) {
+            console.warn('[ASSORTMENT] Missing channel_id or brand_id, aborting');
+            return;
+        }
+        
+        // Show loading state
+        console.log('[ASSORTMENT] Showing loading state');
+        assortmentContainer.innerHTML = `
+            <div class="chart-loading">
+                <div>Loading assortment data...</div>
+            </div>
+        `;
+        
+        // Build query parameters
+        const params = new URLSearchParams({
+            channel_id: channelId,
+            brand_id: brandId,
+            sort_by: currentSortBy,
+            sort_order: currentSortOrder,
+            page: currentPage
+        });
+        
+        const url = `/core/customers/api/assortment-by-channel?${params.toString()}`;
+        console.log('[ASSORTMENT] Fetching URL:', url);
+        
+        // Fetch assortment data
+        fetch(url)
+            .then(response => {
+                console.log('[ASSORTMENT] Response received:', response.status, response.statusText);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('[ASSORTMENT] Data received:', data);
+                if (data.error) {
+                    console.error('[ASSORTMENT] API returned error:', data.error);
+                    assortmentContainer.innerHTML = `
+                        <div class="no-selection">
+                            <h3>Error</h3>
+                            <p>${data.error}</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                paginationData = data.pagination || null;
+                console.log('[ASSORTMENT] Pagination data:', paginationData);
+                console.log('[ASSORTMENT] Items count:', (data.items || []).length);
+                displayAssortment(data.items || []);
+            })
+            .catch(error => {
+                console.error('[ASSORTMENT] Error loading assortment:', error);
+                console.error('[ASSORTMENT] Error stack:', error.stack);
+                assortmentContainer.innerHTML = `
+                    <div class="no-selection">
+                        <h3>Error</h3>
+                        <p>Failed to load assortment data. Please check the console for details.</p>
+                        <p style="font-size: 0.75rem; color: #718096; margin-top: 10px;">Error: ${error.message}</p>
+                    </div>
+                `;
+            });
+    }
+    
+    function handleSort(column) {
+        if (currentSortBy === column) {
+            // Toggle sort order if same column
+            currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+        } else {
+            // New column, default to desc
+            currentSortBy = column;
+            currentSortOrder = 'desc';
+        }
+        currentPage = 1; // Reset to first page when sorting
+        loadAssortment();
+    }
+    
+    function handlePageChange(page) {
+        currentPage = page;
+        loadAssortment();
+        // Scroll to top of container
+        assortmentContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    
+    function getSortArrow(column) {
+        if (currentSortBy !== column) {
+            return '<span class="sort-arrow">↕</span>';
+        }
+        return currentSortOrder === 'asc' 
+            ? '<span class="sort-arrow active">↑</span>'
+            : '<span class="sort-arrow active">↓</span>';
+    }
+    
+    function displayAssortment(items) {
+        if (items.length === 0) {
+            assortmentContainer.innerHTML = `
+                <div class="no-selection">
+                    <h3>No Assortment Found</h3>
+                    <p>No products found for the selected channel and brand combination.</p>
+                </div>
+            `;
+            return;
+        }
+        
+        let html = `
+            <table class="assortment-table">
+                <thead>
+                    <tr>
+                        <th>Item</th>
+                        <th>ASIN Status</th>
+                        <th>
+                            <div class="sortable-header" onclick="handleSort('revenues_2024')">
+                                Revenues 2024
+                                ${getSortArrow('revenues_2024')}
+                            </div>
+                        </th>
+                        <th>
+                            <div class="sortable-header" onclick="handleSort('revenues_2025')">
+                                Revenues 2025
+                                ${getSortArrow('revenues_2025')}
+                            </div>
+                        </th>
+                        <th>YoY Growth</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        items.forEach(item => {
+            // Build item cell with image and name
+            let itemCell = `<div class="item-code-cell">`;
+            if (item.asin_img_url) {
+                itemCell += `<img src="${item.asin_img_url}" alt="${item.essor_name || ''}" class="item-img" onerror="this.style.display='none'">`;
+            }
+            itemCell += `<span>${item.essor_name || '-'}</span></div>`;
+            
+            // Calculate YoY growth flag
+            let yoyFlag = '';
+            let yoyText = '';
+            if (item.yoy_growth !== null && item.yoy_growth !== undefined) {
+                const growth = item.yoy_growth;
+                if (growth > 10) {
+                    yoyFlag = '<span class="yoy-flag green" title="YoY Growth > 10%"></span>';
+                    yoyText = `+${growth.toFixed(1)}%`;
+                } else if (growth >= 0 && growth <= 10) {
+                    yoyFlag = '<span class="yoy-flag blue" title="YoY Growth 0-10%"></span>';
+                    yoyText = `+${growth.toFixed(1)}%`;
+                } else if (growth >= -10 && growth < 0) {
+                    yoyFlag = '<span class="yoy-flag orange" title="YoY Growth -10% to 0%"></span>';
+                    yoyText = `${growth.toFixed(1)}%`;
+                } else {
+                    yoyFlag = '<span class="yoy-flag red" title="YoY Growth < -10%"></span>';
+                    yoyText = `${growth.toFixed(1)}%`;
+                }
+            } else {
+                yoyText = '-';
+            }
+            
+            // Format ASIN status
+            const asinStatus = item.asin_status || '-';
+            const statusBadge = asinStatus !== '-' 
+                ? `<span style="padding: 4px 12px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; background: ${getStatusColor(asinStatus)}; color: white;">${asinStatus}</span>`
+                : '-';
+            
+            html += `
+                <tr>
+                    <td>${itemCell}</td>
+                    <td>${statusBadge}</td>
+                    <td>$${Math.round(item.revenues_2024).toLocaleString()}</td>
+                    <td>$${Math.round(item.revenues_2025).toLocaleString()}</td>
+                    <td><div class="yoy-growth-cell">${yoyFlag}${yoyText}</div></td>
+                </tr>
+            `;
+        });
+        
+        html += `
+                </tbody>
+            </table>
+        `;
+        
+        // Add pagination controls
+        if (paginationData && paginationData.total_pages > 1) {
+            html += `
+                <div class="pagination-container">
+                    <button 
+                        class="pagination-button" 
+                        onclick="handlePageChange(${currentPage - 1})"
+                        ${currentPage === 1 ? 'disabled' : ''}
+                    >
+                        Previous
+                    </button>
+                    <span class="pagination-info">
+                        Page ${paginationData.page} of ${paginationData.total_pages} 
+                        (${paginationData.total} items)
+                    </span>
+                    <button 
+                        class="pagination-button" 
+                        onclick="handlePageChange(${currentPage + 1})"
+                        ${currentPage === paginationData.total_pages ? 'disabled' : ''}
+                    >
+                        Next
+                    </button>
+                </div>
+            `;
+        } else if (paginationData) {
+            // Show item count even if only one page
+            html += `
+                <div class="pagination-container">
+                    <span class="pagination-info">
+                        Showing ${paginationData.total} item${paginationData.total !== 1 ? 's' : ''}
+                    </span>
+                </div>
+            `;
+        }
+        
+        assortmentContainer.innerHTML = html;
+    }
+    
+    // Helper function to get status color
+    function getStatusColor(status) {
+        const statusLower = (status || '').toLowerCase();
+        if (statusLower === 'active') {
+            return '#48bb78'; // green
+        } else if (statusLower === 'new') {
+            return '#4299e1'; // blue
+        } else if (statusLower === 'inactive' || statusLower === 'discontinued') {
+            return '#e53e3e'; // red
+        } else {
+            return '#718096'; // gray
+        }
+    }
+    
+    // Make functions globally accessible for onclick handlers
+    window.handleSort = handleSort;
+    window.handlePageChange = handlePageChange;
+    window.getSortArrow = getSortArrow;
+</script>
+{% endblock %}

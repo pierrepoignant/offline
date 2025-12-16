@@ -471,6 +471,62 @@ def api_chart_data():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@netsuite_bp.route('/api/target-data')
+@login_required
+def api_target_data():
+    """API endpoint to get 2026 target data based on brand and channel filters"""
+    try:
+        from models import TargetData
+        from sqlalchemy import extract
+        
+        # Get filter parameters
+        brand_id = request.args.get('brand_id', type=int)
+        channel_id = request.args.get('channel_id', type=int)
+        year = 2026  # Always get 2026 targets
+        
+        # Query for 2026 targets
+        query = db.session.query(
+            extract('month', TargetData.date).label('month'),
+            func.sum(TargetData.revenue).label('total_revenue')
+        ).filter(
+            extract('year', TargetData.date) == year
+        )
+        
+        # Apply filters
+        if brand_id:
+            query = query.filter(TargetData.brand_id == brand_id)
+        if channel_id:
+            query = query.filter(TargetData.channel_id == channel_id)
+        
+        # Group by month
+        query = query.group_by(extract('month', TargetData.date))
+        
+        # Execute query
+        results = query.all()
+        
+        # Build month dictionary
+        months = {}
+        for result in results:
+            month = int(result.month)
+            months[month] = float(result.total_revenue) if result.total_revenue else None
+        
+        # Build array for all 12 months
+        month_names = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        values = []
+        
+        for month in range(1, 13):
+            # Use None for missing data (Chart.js will skip these points)
+            values.append(months.get(month))
+        
+        return jsonify({
+            'labels': month_names,
+            'values': values,
+            'year': year
+        })
+    
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 def _save_import_error(import_channel, row_data, error_message, row_number=None):
     """Helper function to save import errors to the database"""
     try:
